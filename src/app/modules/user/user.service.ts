@@ -3,15 +3,16 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-function generateUniqueId(prefix: string) {
+function generateUniqueId(name: string) {
+  const userName = name.replace(" ", "").toLowerCase();
   const random = Math.random().toFixed(2).replace("0.", "");
-  return `${prefix}${random}`;
+  return `${userName}${random}`;
 }
 
 const createAdmin = async (payload: any) => {
   const hasPassword = await bcrypt.hash(payload.password, 10);
   const userData = {
-    userId: generateUniqueId(payload.name),
+    userId: generateUniqueId(payload.admin.name),
     email: payload.admin.email,
     password: hasPassword,
     role: UserRole.ADMIN,
@@ -22,12 +23,13 @@ const createAdmin = async (payload: any) => {
       data: userData,
     });
     const admin = await transcationClient.admin.create({
-      data: payload.admin,
+      data: {
+        userId: userData.userId,
+        ...payload.admin,
+      },
     });
     return admin;
   });
-
-  console.log(userData);
 
   return result;
 };
