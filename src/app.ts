@@ -1,7 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import { StatusCodes } from "http-status-codes";
-import middleWareRouter from "./app/modules/routes";
+import middleWareRouter from "./app/routes";
 
 const app: Application = express();
 

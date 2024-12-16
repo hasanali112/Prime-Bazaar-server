@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { UserRoutes } from "../user/user.routes";
+import { UserRoutes } from "../modules/user/user.routes";
+import { AdminRoutes } from "../modules/admin/admin.routes";
 
 const middleWareRouter = Router();
 
@@ -7,6 +8,10 @@ const router = [
   {
     path: "/users",
     router: UserRoutes,
+  },
+  {
+    path: "/admin",
+    router: AdminRoutes,
   },
 ];
 
