@@ -1,6 +1,6 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
-import { typeDefs } from "./gql/typeDefs/index";
+import { typeDefs } from "./gql/schemas/index";
 import { resolvers } from "./gql/resolver/index";
 
 const server = async () => {
