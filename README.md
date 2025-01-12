@@ -6,7 +6,7 @@ This project aims to develop a Multi-Vendor E-Commerce Dashboard that allows mul
 The system will be developed using the following tech stack:
 
 - **Frontend**: Next.js, Tailwind CSS
-- **Backend**: Express.js
+- **Backend**: Graphql Apollo Server
 - **Database**: PostgreSQL
 - **ORM**: Prisma
 
