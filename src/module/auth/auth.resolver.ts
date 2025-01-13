@@ -3,7 +3,7 @@ import { GraphQLError } from "graphql";
 import { TPrisma, TUserType } from "./auth.interface";
 
 export const authResolver = {
-  userSignUp: async (args: TUserType, { prisma }: TPrisma) => {
+  userSignUp: async (_parant: any, args: TUserType, { prisma }: TPrisma) => {
     const userData = args.input;
     const userSignUpData = {
       email: userData.email,
@@ -26,8 +26,27 @@ export const authResolver = {
           data: userSignUpData,
         });
 
+        //admin create
         if (userData.role === UserRole.ADMIN) {
           await transactionClient.admin.create({
+            data: {
+              userId: createUser.id,
+              ...sepicificUser,
+            },
+          });
+        }
+        //vendor create
+        else if (userData.role === UserRole.VENDOR) {
+          await transactionClient.vendor.create({
+            data: {
+              userId: createUser.id,
+              ...sepicificUser,
+            },
+          });
+        }
+        //customer create
+        else if (userData.role === UserRole.CUSTOMER) {
+          await transactionClient.customer.create({
             data: {
               userId: createUser.id,
               ...sepicificUser,
