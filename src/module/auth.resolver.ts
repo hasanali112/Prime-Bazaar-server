@@ -1,10 +1,9 @@
-import { PrismaClient, UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 import { GraphQLError } from "graphql";
-
-const prisma = new PrismaClient();
+import { TPrisma, TUserType } from "./auth.interface";
 
 export const authResolver = {
-  userSignUp: async (parent: any, args: any, context: any) => {
+  userSignUp: async (args: TUserType, { prisma }: TPrisma) => {
     const userData = args.input;
     const userSignUpData = {
       email: userData.email,
