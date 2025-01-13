@@ -8,23 +8,21 @@ export const typeDefs = `#graphql
 
 type Mutation {
   userSignUp(input: UserSignUpInput!): User
-  createAdmin(input: CreateAdminInput!): Admin
+  
 }
 
 input UserSignUpInput {
   email: String!
   password: String!
   role: String!
-}
-
-input CreateAdminInput {
   name: String!
-  email: String!
   contactNumber: String!
   emergencyContactNumber: String!
   gender: String!
   address: String!
 }
+
+
 
 type User {
   id: ID!
