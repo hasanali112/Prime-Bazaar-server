@@ -4,11 +4,14 @@ import { typeDefs } from "./gql/schemas/index";
 import { resolvers } from "./gql/resolver/index";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
+import { IncomingMessage, ServerResponse } from "http";
 
 const prisma = new PrismaClient();
 
 interface Context {
   prisma: PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>;
+  req: IncomingMessage;
+  res: ServerResponse<IncomingMessage>;
 }
 
 const server = async () => {
@@ -19,9 +22,11 @@ const server = async () => {
 
   const { url } = await startStandaloneServer(server, {
     listen: { port: 4000 },
-    context: async (): Promise<Context> => {
+    context: async ({ req, res }): Promise<Context> => {
       return {
         prisma,
+        req,
+        res,
       };
     },
   });

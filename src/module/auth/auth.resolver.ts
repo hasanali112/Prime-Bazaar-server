@@ -1,5 +1,5 @@
 import { UserRole } from "@prisma/client";
-import { TPrisma, TUserType } from "./auth.interface";
+import { TLoginType, TPrisma, TUserType } from "./auth.interface";
 import { ManagePassword } from "../../helper/handlePassword";
 import AppError from "../../error/AppError";
 import { assert } from "console";
@@ -63,11 +63,11 @@ export const authResolver = {
   },
 
   //user login
-
-  login: async (parent: any, { email, password }: any, { prisma }: TPrisma) => {
+  login: async (parent: any, args: TLoginType, { prisma, res }: TPrisma) => {
+    const { email, password } = args.input;
     const isUserExist = await prisma.user.findUnique({
       where: {
-        email,
+        email: email,
       },
     });
 
@@ -101,7 +101,13 @@ export const authResolver = {
       config.refresh_expires_in as string
     );
 
+    res.setHeader("Set-Cookie", [
+      `refreshToken=${refreshToken}; HttpOnly; Secure=${
+        config.dev_env === "production"
+      }; SameSite=Strict; Path=/; Max-Age=${30 * 24 * 60 * 60}`,
+    ]);
     return {
+      message: "Login Successfully",
       accessToken,
     };
   },
