@@ -28,6 +28,7 @@ input LoginInput {
 }
 
 type LoginResponse {
+  message: String!
   accessToken: String!
 }
 
