@@ -5,6 +5,12 @@ const hashPassword = async (password: string) => {
   return hashedPassword;
 };
 
+const comparedPassword = async (password: string, hashedPassword: string) => {
+  const isMatch = await bcrypt.compare(password, hashedPassword);
+  return isMatch;
+};
+
 export const ManagePassword = {
   hashPassword,
+  comparedPassword,
 };
