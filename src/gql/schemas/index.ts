@@ -8,7 +8,7 @@ export const typeDefs = `#graphql
 
 type Mutation {
   userSignUp(input: UserSignUpInput!): User
-  
+  login(input: LoginInput!): LoginResponse
 }
 
 input UserSignUpInput {
@@ -22,6 +22,14 @@ input UserSignUpInput {
   address: String!
 }
 
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type LoginResponse {
+  accessToken: String!
+}
 
 
 type User {
