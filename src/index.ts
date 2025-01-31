@@ -1,7 +1,7 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
-import { typeDefs } from "./gql/schemas/index";
-import { resolvers } from "./gql/resolver/index";
+import { typeDefs } from "./schema";
+import { resolvers } from "./resolvers";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 import { IncomingMessage, ServerResponse } from "http";

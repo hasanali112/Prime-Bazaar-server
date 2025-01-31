@@ -2,7 +2,6 @@ import { UserRole } from "@prisma/client";
 import { TLoginType, TPrisma, TUserType } from "./auth.interface";
 import { ManagePassword } from "../../helper/handlePassword";
 import AppError from "../../error/AppError";
-import { assert } from "console";
 import { jwtHelper } from "../../helper/jwtHelper";
 import config from "../../config";
 
@@ -13,6 +12,7 @@ interface ProfileModel {
 export const authResolver = {
   //user SignUp
   userSignUp: async (_parant: any, args: TUserType, { prisma }: TPrisma) => {
+    // console.log("args: ", args);
     const { email, password, role, ...userInfo } = args.input;
 
     const hashedPassword = await ManagePassword.hashPassword(password);
@@ -58,6 +58,7 @@ export const authResolver = {
 
       return result;
     } catch (error) {
+      console.error("Error during user signup:", error);
       throw new AppError("SignUp Failed", "BAD_REQUEST");
     }
   },
