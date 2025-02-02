@@ -8,6 +8,7 @@ import { IncomingMessage, ServerResponse } from "http";
 import { jwtHelper } from "./helper/jwtHelper";
 import config from "./config";
 import { JwtPayload } from "jsonwebtoken";
+import { globalErrorHandler } from "./error/globalErrorHandler";
 
 const prisma = new PrismaClient();
 
@@ -22,6 +23,10 @@ const server = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    formatError: (formattedError, error: any) => {
+      const handledError = globalErrorHandler(error);
+      return handledError;
+    },
   });
 
   const { url } = await startStandaloneServer(server, {
