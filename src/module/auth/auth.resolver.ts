@@ -86,6 +86,7 @@ export const authResolver = {
     }
 
     const jwtPayload = {
+      userId: isUserExist.id,
       email: email,
       role: isUserExist.role,
     };

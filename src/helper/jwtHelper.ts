@@ -1,6 +1,7 @@
-import jwt, { Secret } from "jsonwebtoken";
+import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 
 type TokenPayload = {
+  userId: string;
   email: string;
   role: string;
 };
@@ -14,6 +15,10 @@ const generateToken = (
   return token;
 };
 
+const verifyToken = (token: string, secret: Secret) => {
+  return jwt.verify(token, secret) as JwtPayload; //returns the payload as a JwtPayload object.
+};
 export const jwtHelper = {
   generateToken,
+  verifyToken,
 };

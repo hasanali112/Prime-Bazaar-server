@@ -2,8 +2,8 @@ export const typeDefs = `#graphql
  type Query {
     user : User
     admin : Admin
-    vendor : Vendor
-    customer : Customer
+    vendor : [Vendor]
+    customer : [Customer]
   }
 
 type Mutation {
