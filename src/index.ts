@@ -8,7 +8,8 @@ import { IncomingMessage, ServerResponse } from "http";
 import { jwtHelper } from "./helper/jwtHelper";
 import config from "./config";
 import { JwtPayload } from "jsonwebtoken";
-import { globalErrorHandler } from "./error/globalErrorHandler";
+
+import { globalErrorHandler } from "./middleware/globalErrorHandler";
 
 const prisma = new PrismaClient();
 
@@ -23,6 +24,7 @@ const server = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    // introspection: process.env.NODE_ENV !== "production",
     formatError: (formattedError, error: any) => {
       const handledError = globalErrorHandler(error);
       return handledError;
@@ -31,14 +33,42 @@ const server = async () => {
 
   const { url } = await startStandaloneServer(server, {
     listen: { port: 4000 },
+    // context: async ({ req, res }): Promise<Context> => {
+    //   return { prisma, req, res };
+    //   // try {
+    //   //   const userInfo = jwtHelper.verifyToken(
+    //   //     req.headers.authorization as string,
+    //   //     config.access_secret as string
+    //   //   );
+    //   //   return {
+    //   //     prisma,
+    //   //     userInfo,
+    //   //     req,
+    //   //     res,
+    //   //   };
+    //   // } catch (error) {
+    //   //   throw new AppError("Authentication failed", "UNAUTHORIZED");
+    //   // }
+    // },
     context: async ({ req, res }): Promise<Context> => {
-      const userInfo = jwtHelper.verifyToken(
-        req.headers.authorization as string,
-        config.access_secret as string
-      );
+      let userInfo: JwtPayload | null = null;
+
+      // Handle missing or invalid token safely
+      const authHeader = req.headers.authorization;
+      if (authHeader) {
+        try {
+          userInfo = jwtHelper.verifyToken(
+            authHeader,
+            config.access_secret as string
+          );
+        } catch (error) {
+          console.warn("Invalid token, proceeding without authentication.");
+        }
+      }
+
       return {
         prisma,
-        userInfo,
+        userInfo, // Can be null if authentication fails
         req,
         res,
       };
