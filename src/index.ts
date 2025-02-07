@@ -33,23 +33,7 @@ const server = async () => {
 
   const { url } = await startStandaloneServer(server, {
     listen: { port: 4000 },
-    // context: async ({ req, res }): Promise<Context> => {
-    //   return { prisma, req, res };
-    //   // try {
-    //   //   const userInfo = jwtHelper.verifyToken(
-    //   //     req.headers.authorization as string,
-    //   //     config.access_secret as string
-    //   //   );
-    //   //   return {
-    //   //     prisma,
-    //   //     userInfo,
-    //   //     req,
-    //   //     res,
-    //   //   };
-    //   // } catch (error) {
-    //   //   throw new AppError("Authentication failed", "UNAUTHORIZED");
-    //   // }
-    // },
+
     context: async ({ req, res }): Promise<Context> => {
       let userInfo: JwtPayload | null = null;
 
