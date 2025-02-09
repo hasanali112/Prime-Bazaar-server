@@ -1,12 +1,28 @@
 export const typeDefs = `#graphql
  type Query {
     me : User
-    users:[User]
     admins : [Admin]
     vendors : [Vendor]
     customers : [Customer]
-  
+    getAllUsers(
+    page: Int, 
+    limit: Int, 
+    role: String, 
+    status: String, 
+    searchTerm: String
+  ): UserListResponse!
   }
+
+  type UserListResponse {
+  meta: Meta
+  data: [User]
+}
+
+type Meta {
+  page: Int!
+  limit: Int!
+  total: Int!
+}
 
 type Mutation {
   userSignUp(input: UserSignUpInput!): User
@@ -41,6 +57,9 @@ type User {
   role: String!
   createdAt: String!
   updatedAt: String!
+  admin: Admin
+  vendor: Vendor
+  customer: Customer
 }
 
 type Admin {
