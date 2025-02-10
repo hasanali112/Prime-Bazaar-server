@@ -27,6 +27,7 @@ type Meta {
 type Mutation {
   userSignUp(input: UserSignUpInput!): User
   login(input: LoginInput!): LoginResponse
+  updateUserStatus(input: UpdateUserStatusInput!): User!
 }
 
 input UserSignUpInput {
@@ -105,6 +106,18 @@ type Admin {
     updatedAt  :            String!
  }
 
+input UpdateUserStatusInput {
+  userId: ID!
+  status: UserStatus!
+  startTime: String
+  endTime: String
+}
 
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  SUSPENDED
+  DELETED
+}
  
 `;

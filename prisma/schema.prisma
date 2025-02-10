@@ -8,18 +8,19 @@ datasource db {
 }
 
 model User {
-  id                 String     @id @default(uuid())
-  email              String     @unique
+  id                 String         @id @default(uuid())
+  email              String         @unique
   password           String
   role               UserRole
-  status             UserStatus @default(ACTIVE)
-  needPasswordChange Boolean    @default(false)
-  isDeleted          Boolean    @default(false)
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  status             UserStatus     @default(ACTIVE)
+  needPasswordChange Boolean        @default(false)
+  // isDeleted          Boolean        @default(false)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
   admin              Admin?
   vendor             Vendor?
   customer           Customer?
+  suspendedUser      SuspendedUser?
 
   @@map("users")
 }
@@ -78,6 +79,18 @@ model Customer {
   @@map("customers")
 }
 
+model SuspendedUser {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("suspended_users")
+}
+
 enum Gender {
   MALE
   FEMALE
@@ -92,4 +105,6 @@ enum UserRole {
 enum UserStatus {
   ACTIVE
   BLOCKED
+  SUSPENDED
+  DELETED
 }

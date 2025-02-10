@@ -1,7 +1,7 @@
 import { UserRole } from "@prisma/client";
 import AppError from "../../error/AppError";
 
-export const userResolver = {
+export const userQueryResolver = {
   me: async (parent: any, args: any, { prisma, userInfo }: any) => {
     if (!userInfo) {
       throw new AppError("Authentication required", "UNAUTHORIZED");
