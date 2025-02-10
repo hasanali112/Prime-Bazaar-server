@@ -56,6 +56,7 @@ type User {
   id: ID!
   email: String!
   role: String!
+  status: String
   createdAt: String!
   updatedAt: String!
   admin: Admin

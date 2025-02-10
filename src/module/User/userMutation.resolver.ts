@@ -14,47 +14,128 @@ export const userMutationResolver = {
         "FORBIDDEN"
       );
     }
+
     const { userId, status, startTime, endTime } = args.input;
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
+
     if (!user) {
       throw new AppError("User not found", "NOT_FOUND");
     }
-    //check user already suspended or Deleted
-    if (user.status === "SUSPEND" || user.status === "DELETED") {
-      throw new AppError("User already suspended or Deleted", "BAD_REQUEST");
+
+    // Check if user is already suspended or deleted
+    if (
+      user.status === UserStatus.SUSPENDED ||
+      user.status === UserStatus.DELETED
+    ) {
+      throw new AppError("User already suspended or deleted", "BAD_REQUEST");
     }
 
     return await prisma.$transaction(
       async (transactionClient: PrismaClient) => {
         if (status === UserStatus.DELETED) {
           // Soft delete by setting status to DELETED
-          return await transactionClient.user.update({
+          const updatedUser = await transactionClient.user.update({
             where: { id: userId },
             data: { status: UserStatus.DELETED },
           });
+
+          if (user.role === UserRole.VENDOR) {
+            await transactionClient.vendor.update({
+              where: { userId: userId },
+              data: { status: UserStatus.DELETED },
+            });
+          } else if (user.role === UserRole.CUSTOMER) {
+            await transactionClient.customer.update({
+              where: { userId: userId },
+              data: { status: UserStatus.DELETED },
+            });
+          }
+
+          return updatedUser;
         } else if (status === UserStatus.BLOCKED) {
-          return await transactionClient.user.update({
+          // Block user
+          const updatedUser = await transactionClient.user.update({
             where: { id: userId },
             data: { status: UserStatus.BLOCKED },
           });
+
+          if (user.role === UserRole.VENDOR) {
+            await transactionClient.vendor.update({
+              where: { userId: userId },
+              data: { status: UserStatus.BLOCKED },
+            });
+          } else if (user.role === UserRole.CUSTOMER) {
+            await transactionClient.customer.update({
+              where: { userId: userId },
+              data: { status: UserStatus.BLOCKED },
+            });
+          }
+
+          return updatedUser;
         } else if (status === UserStatus.SUSPENDED) {
           if (!startTime || !endTime) {
             throw new AppError("startTime and endTime required", "BAD_REQUEST");
           }
-          // First, update user status
+
+          const currentTime = new Date();
+          const startTimeDate = new Date(startTime);
+          const endTimeDate = new Date(endTime);
+
+          // Ensure startTime is equal to or later than the current date-time
+          if (startTimeDate < currentTime) {
+            throw new AppError(
+              `startTime must be equal to or later than the current date-time. Current time: ${currentTime.toISOString()}`,
+              "BAD_REQUEST"
+            );
+          }
+
+          // Suspend user
           const updatedUser = await transactionClient.user.update({
             where: { id: userId },
             data: { status: UserStatus.SUSPENDED },
           });
 
-          // Then, create a suspension record
+          if (user.role === UserRole.VENDOR) {
+            await transactionClient.vendor.update({
+              where: { userId: userId },
+              data: { status: UserStatus.SUSPENDED },
+            });
+          } else if (user.role === UserRole.CUSTOMER) {
+            await transactionClient.customer.update({
+              where: { userId: userId },
+              data: { status: UserStatus.SUSPENDED },
+            });
+          }
+
+          // Create a suspension record
           await transactionClient.suspendedUser.create({
             data: {
               userId,
-              startTime: new Date(startTime),
-              endTime: new Date(endTime),
+              startTime: startTimeDate,
+              endTime: endTimeDate,
             },
           });
+
+          return updatedUser;
+        } else if (status === UserStatus.ACTIVE) {
+          // Activate user
+          const updatedUser = await transactionClient.user.update({
+            where: { id: userId },
+            data: { status: UserStatus.ACTIVE },
+          });
+
+          if (user.role === UserRole.VENDOR) {
+            await transactionClient.vendor.update({
+              where: { userId },
+              data: { status: UserStatus.ACTIVE },
+            });
+          } else if (user.role === UserRole.CUSTOMER) {
+            await transactionClient.customer.update({
+              where: { userId },
+              data: { status: UserStatus.ACTIVE },
+            });
+          }
 
           return updatedUser;
         } else {

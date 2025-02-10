@@ -32,7 +32,7 @@ CREATE TABLE "admins" (
     "gender" "Gender" NOT NULL,
     "profileImg" TEXT,
     "address" TEXT NOT NULL,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -50,7 +50,7 @@ CREATE TABLE "vendors" (
     "gender" "Gender" NOT NULL,
     "profileImg" TEXT,
     "address" TEXT NOT NULL,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -68,7 +68,7 @@ CREATE TABLE "customers" (
     "gender" "Gender" NOT NULL,
     "profileImg" TEXT,
     "address" TEXT NOT NULL,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
