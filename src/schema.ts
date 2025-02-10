@@ -1,22 +1,28 @@
 export const typeDefs = `#graphql
- type Query {
-    me : User
-    admins : [Admin]
-    vendors : [Vendor]
-    customers : [Customer]
-    getAllUsers(
-    page: Int, 
-    limit: Int, 
-    role: String, 
-    status: String, 
-    searchTerm: String
-  ): UserListResponse!
-  }
 
-  type UserListResponse {
+interface BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
+}
+
+
+type SingleResponse implements BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
+  data: User
+}
+
+
+type ListResponse implements BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
   meta: Meta
   data: [User]
 }
+
 
 type Meta {
   page: Int!
@@ -24,9 +30,24 @@ type Meta {
   total: Int!
 }
 
+type Query {
+  me: SingleResponse!
+  admins: ListResponse!
+  vendors: ListResponse!
+  customers: ListResponse!
+  getAllUsers(
+    page: Int
+    limit: Int
+    role: String
+    status: String
+    searchTerm: String
+  ): ListResponse!
+}
+
 type Mutation {
-  userSignUp(input: UserSignUpInput!): User
-  login(input: LoginInput!): LoginResponse
+  userSignUp(input: UserSignUpInput!): SingleResponse!
+  login(input: LoginInput!): LoginResponse!
+  updateUserStatus(input: UpdateUserStatusInput!): SingleResponse!
 }
 
 input UserSignUpInput {
@@ -55,6 +76,7 @@ type User {
   id: ID!
   email: String!
   role: String!
+  status: String
   createdAt: String!
   updatedAt: String!
   admin: Admin
@@ -105,6 +127,18 @@ type Admin {
     updatedAt  :            String!
  }
 
+input UpdateUserStatusInput {
+  userId: ID!
+  status: UserStatus!
+  startTime: String
+  endTime: String
+}
 
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  SUSPENDED
+  DELETED
+}
  
 `;

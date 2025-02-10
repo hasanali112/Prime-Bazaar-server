@@ -5,7 +5,7 @@ CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE');
 CREATE TYPE "UserRole" AS ENUM ('CUSTOMER', 'VENDOR', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'BLOCKED');
+CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'BLOCKED', 'SUSPENDED', 'DELETED');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -15,7 +15,6 @@ CREATE TABLE "users" (
     "role" "UserRole" NOT NULL,
     "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "needPasswordChange" BOOLEAN NOT NULL DEFAULT false,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -33,7 +32,7 @@ CREATE TABLE "admins" (
     "gender" "Gender" NOT NULL,
     "profileImg" TEXT,
     "address" TEXT NOT NULL,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -51,7 +50,7 @@ CREATE TABLE "vendors" (
     "gender" "Gender" NOT NULL,
     "profileImg" TEXT,
     "address" TEXT NOT NULL,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -69,11 +68,23 @@ CREATE TABLE "customers" (
     "gender" "Gender" NOT NULL,
     "profileImg" TEXT,
     "address" TEXT NOT NULL,
-    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "customers_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "suspended_users" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "startTime" TIMESTAMP(3) NOT NULL,
+    "endTime" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "suspended_users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -94,6 +105,9 @@ CREATE UNIQUE INDEX "vendors_email_key" ON "vendors"("email");
 -- CreateIndex
 CREATE UNIQUE INDEX "customers_userId_key" ON "customers"("userId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "suspended_users_userId_key" ON "suspended_users"("userId");
+
 -- AddForeignKey
 ALTER TABLE "admins" ADD CONSTRAINT "admins_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -102,3 +116,6 @@ ALTER TABLE "vendors" ADD CONSTRAINT "vendors_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "customers" ADD CONSTRAINT "customers_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "suspended_users" ADD CONSTRAINT "suspended_users_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

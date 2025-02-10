@@ -1,4 +1,4 @@
-import { UserRole } from "@prisma/client";
+import { UserRole, UserStatus } from "@prisma/client";
 import { TLoginType, TPrisma, TUserType } from "./auth.interface";
 import { ManagePassword } from "../../helper/handlePassword";
 import AppError from "../../error/AppError";
@@ -56,9 +56,13 @@ export const authResolver = {
         return createUser;
       });
 
-      return result;
-    } catch (error) {
-      console.error("Error during user signup:", error);
+      return {
+        statusCode: 200,
+        success: true,
+        message: "User is registered successfully",
+        data: result,
+      };
+    } catch (error: any) {
       throw new AppError("SignUp Failed", "BAD_REQUEST");
     }
   },
@@ -74,6 +78,15 @@ export const authResolver = {
 
     if (!isUserExist) {
       throw new AppError("User Not Found", "BAD_REQUEST");
+    }
+    if (isUserExist.status === UserStatus.BLOCKED) {
+      throw new AppError("User Blocked", "BAD_REQUEST");
+    }
+    if (isUserExist.status === UserStatus.SUSPENDED) {
+      throw new AppError("User SUSPEND", "BAD_REQUEST");
+    }
+    if (isUserExist.status === UserStatus.DELETED) {
+      throw new AppError("User Deleted", "BAD_REQUEST");
     }
 
     const isPasswordMatch = await ManagePassword.comparedPassword(

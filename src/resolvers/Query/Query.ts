@@ -1,5 +1,5 @@
-import { userResolver } from "../../module/User/user.resolver";
+import { userQueryResolver } from "../../module/User/userQuery.resolver";
 
 export const Query = {
-  ...userResolver,
+  ...userQueryResolver,
 };

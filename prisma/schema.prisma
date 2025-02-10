@@ -8,61 +8,64 @@ datasource db {
 }
 
 model User {
-  id                 String     @id @default(uuid())
-  email              String     @unique
+  id                 String         @id @default(uuid())
+  email              String         @unique
   password           String
   role               UserRole
-  status             UserStatus @default(ACTIVE)
-  needPasswordChange Boolean    @default(false)
-  isDeleted          Boolean    @default(false)
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  status             UserStatus     @default(ACTIVE)
+  needPasswordChange Boolean        @default(false)
+  // isDeleted          Boolean        @default(false)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
   admin              Admin?
   vendor             Vendor?
   customer           Customer?
+  suspendedUser      SuspendedUser?
 
   @@map("users")
 }
 
 model Admin {
-  id                     String   @id @default(uuid())
-  userId                 String   @unique
+  id                     String     @id @default(uuid())
+  userId                 String     @unique
   name                   String
-  email                  String   @unique
+  email                  String     @unique
   contactNumber          String
   emergencyContactNumber String
   gender                 Gender
   profileImg             String?
   address                String
-  isDeleted              Boolean  @default(false)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  user                   User     @relation(fields: [userId], references: [id])
+  status                 UserStatus @default(ACTIVE)
+  // isDeleted              Boolean  @default(false)
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  user                   User       @relation(fields: [userId], references: [id])
 
   @@map("admins")
 }
 
 model Vendor {
-  id                     String   @id @default(uuid())
-  userId                 String   @unique
+  id                     String     @id @default(uuid())
+  userId                 String     @unique
   name                   String
-  email                  String   @unique
+  email                  String     @unique
   contactNumber          String
   emergencyContactNumber String
   gender                 Gender
   profileImg             String?
   address                String
-  isDeleted              Boolean  @default(false)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  user                   User     @relation(fields: [userId], references: [id])
+  // isDeleted              Boolean  @default(false)
+  status                 UserStatus @default(ACTIVE)
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  user                   User       @relation(fields: [userId], references: [id])
 
   @@map("vendors")
 }
 
 model Customer {
-  id                     String   @id @default(uuid())
-  userId                 String   @unique
+  id                     String     @id @default(uuid())
+  userId                 String     @unique
   name                   String
   email                  String
   contactNumber          String
@@ -70,12 +73,25 @@ model Customer {
   gender                 Gender
   profileImg             String?
   address                String
-  isDeleted              Boolean  @default(false)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  user                   User     @relation(fields: [userId], references: [id])
+  // isDeleted              Boolean  @default(false)
+  status                 UserStatus @default(ACTIVE)
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  user                   User       @relation(fields: [userId], references: [id])
 
   @@map("customers")
+}
+
+model SuspendedUser {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("suspended_users")
 }
 
 enum Gender {
@@ -92,4 +108,6 @@ enum UserRole {
 enum UserStatus {
   ACTIVE
   BLOCKED
+  SUSPENDED
+  DELETED
 }
