@@ -56,9 +56,13 @@ export const authResolver = {
         return createUser;
       });
 
-      return result;
-    } catch (error) {
-      console.error("Error during user signup:", error);
+      return {
+        statusCode: 200,
+        success: true,
+        message: "User is registered successfully",
+        data: result,
+      };
+    } catch (error: any) {
       throw new AppError("SignUp Failed", "BAD_REQUEST");
     }
   },

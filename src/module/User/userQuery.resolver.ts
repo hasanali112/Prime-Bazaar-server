@@ -1,8 +1,8 @@
-import { UserRole } from "@prisma/client";
+import { UserRole, UserStatus } from "@prisma/client";
 import AppError from "../../error/AppError";
 
 export const userQueryResolver = {
-  me: async (parent: any, args: any, { prisma, userInfo }: any) => {
+  me: async (parent: any, args: any, { prisma, userInfo, res }: any) => {
     if (!userInfo) {
       throw new AppError("Authentication required", "UNAUTHORIZED");
     }
@@ -10,9 +10,9 @@ export const userQueryResolver = {
     const user = await prisma.user.findUnique({
       where: { id: userInfo.userId },
       include: {
-        Admin: true,
-        Vendor: true,
-        Customer: true,
+        admin: true,
+        vendor: true,
+        customer: true,
       },
     });
 
@@ -20,28 +20,38 @@ export const userQueryResolver = {
       throw new AppError("User not found", "NOT_FOUND");
     }
 
+    if (
+      user.status === UserStatus.SUSPENDED ||
+      user.status === UserStatus.DELETED
+    ) {
+      throw new AppError("User already suspended or deleted", "BAD_REQUEST");
+    }
     let profileInfo;
     if (userInfo.role === UserRole.ADMIN) {
       profileInfo = await prisma.admin.findUnique({
         where: {
-          id: userInfo.id,
+          userId: user.id,
         },
       });
     } else if (userInfo.role === UserRole.VENDOR) {
       profileInfo = await prisma.admin.findUnique({
         where: {
-          id: userInfo.id,
+          userId: user.id,
         },
       });
     } else if (userInfo.role === UserRole.CUSTOMER) {
       profileInfo = await prisma.doctor.findUnique({
         where: {
-          email: userInfo.email,
+          userId: user.id,
         },
       });
     }
-
-    return { ...userInfo, ...profileInfo };
+    return {
+      statusCode: 200,
+      success: true,
+      message: "User profile fetched successfully",
+      data: { ...user, ...profileInfo },
+    };
   },
 
   getAllUsers: async (
@@ -49,8 +59,6 @@ export const userQueryResolver = {
     { page = 1, limit = 10, role, status, searchTerm }: any,
     { prisma, userInfo }: any
   ) => {
-    // console.log("page", page, "limit:", limit, "searchTerm:", searchTerm);
-    // console.log("userInfo.role:", userInfo.role);
     // Guard to check if the user is an Admin
     if (userInfo.role !== UserRole.ADMIN) {
       throw new AppError(
@@ -95,18 +103,20 @@ export const userQueryResolver = {
       });
 
       // Get the total count of users matching the filter
-      const total = await prisma.user.count({ where: filter });
+      const totalCount = await prisma.user.count({ where: filter });
 
       return {
-        meta: {
-          page,
-          limit,
-          total,
-        },
+        statusCode: 200,
+        success: true,
+        message: "Users fetched successfully",
         data: users,
+        meta: {
+          page: page || 1,
+          limit: limit || 10,
+          total: totalCount,
+        },
       };
     } catch (error) {
-      console.log("Error fetching users:", error);
       throw new AppError("Error fetching users", "INTERNAL_SERVER_ERROR");
     }
   },

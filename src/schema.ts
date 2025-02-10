@@ -1,22 +1,28 @@
 export const typeDefs = `#graphql
- type Query {
-    me : User
-    admins : [Admin]
-    vendors : [Vendor]
-    customers : [Customer]
-    getAllUsers(
-    page: Int, 
-    limit: Int, 
-    role: String, 
-    status: String, 
-    searchTerm: String
-  ): UserListResponse!
-  }
 
-  type UserListResponse {
+interface BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
+}
+
+
+type SingleResponse implements BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
+  data: User
+}
+
+
+type ListResponse implements BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
   meta: Meta
   data: [User]
 }
+
 
 type Meta {
   page: Int!
@@ -24,10 +30,24 @@ type Meta {
   total: Int!
 }
 
+type Query {
+  me: SingleResponse!
+  admins: ListResponse!
+  vendors: ListResponse!
+  customers: ListResponse!
+  getAllUsers(
+    page: Int
+    limit: Int
+    role: String
+    status: String
+    searchTerm: String
+  ): ListResponse!
+}
+
 type Mutation {
-  userSignUp(input: UserSignUpInput!): User
-  login(input: LoginInput!): LoginResponse
-  updateUserStatus(input: UpdateUserStatusInput!): User!
+  userSignUp(input: UserSignUpInput!): SingleResponse!
+  login(input: LoginInput!): LoginResponse!
+  updateUserStatus(input: UpdateUserStatusInput!): SingleResponse!
 }
 
 input UserSignUpInput {
