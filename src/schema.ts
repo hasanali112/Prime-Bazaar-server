@@ -102,6 +102,8 @@ type Mutation {
   login(input: LoginInput!): LoginResponse!
   updateUserStatus(input: UpdateUserStatusInput!): UserResponse!
   createCategory(input: CreateCategoryInput!): CategoryResponse!
+  updateCategory(id: ID!, input: UpdateCategoryInput!): CategoryResponse!
+  deleteCategory(id: ID!): CategoryResponse!
 }
 
 input UserSignUpInput {
@@ -195,6 +197,12 @@ input CreateCategoryInput {
   name: String!
   categoryCode: String!
   image: Upload!
+}
+
+input UpdateCategoryInput {
+  name: String
+  categoryCode: String
+  image: Upload
 }
 
 type Category {

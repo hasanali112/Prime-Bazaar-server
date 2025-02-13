@@ -50,4 +50,66 @@ export const categoryMutationResolver = {
       data: category,
     };
   },
+
+  updateCategory: async (
+    _parent: any,
+    {
+      id,
+      input,
+    }: {
+      id: string;
+      input: { name?: string; image?: File; categoryCode?: string };
+    },
+    { prisma, userInfo }: any
+  ) => {
+    // Guard to check if the user is an Admin
+    if (userInfo.role !== UserRole.ADMIN) {
+      throw new AppError(
+        "You do not have permission to access this data",
+        "FORBIDDEN"
+      );
+    }
+
+    // Check if category exists
+    const existingCategory = await prisma.category.findUnique({
+      where: { id },
+    });
+
+    if (!existingCategory) {
+      throw new AppError("Category not found", "NOT_FOUND");
+    }
+
+    // Prepare update data
+    const updateData: any = {};
+
+    if (input.name) {
+      updateData.name = input.name;
+    }
+
+    if (input.categoryCode) {
+      updateData.categoryCode = input.categoryCode;
+    }
+
+    // Handle image upload if new image is provided
+    if (input.image) {
+      const uploadedImage: any = await uploadSingleImageToCloudinary(
+        input.image,
+        "categories"
+      );
+      updateData.image = uploadedImage.secure_url;
+    }
+
+    // Update category in the database
+    const updatedCategory = await prisma.category.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Category updated successfully",
+      data: updatedCategory,
+    };
+  },
 };

@@ -14,7 +14,6 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import express, { Application } from "express";
 import http from "http";
 import cors from "cors";
-
 import { graphqlUploadExpress } from "graphql-upload-minimal";
 
 const prisma = new PrismaClient();
