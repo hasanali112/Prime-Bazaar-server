@@ -1,21 +1,38 @@
 export const typeDefs = `#graphql
+  # Add Upload scalar
+   scalar Upload
 
+# Generic Response Interface
 interface BaseResponse {
   statusCode: Int!
   success: Boolean!
   message: String
 }
 
+# Existing Meta type
+type Meta {
+  page: Int!
+  limit: Int!
+  total: Int!
+}
 
-type SingleResponse implements BaseResponse {
+# Auth Response
+type LoginResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String!
+  accessToken: String!
+}
+
+# Response Types for Each Entity
+type UserResponse implements BaseResponse {
   statusCode: Int!
   success: Boolean!
   message: String
   data: User
 }
 
-
-type ListResponse implements BaseResponse {
+type UserListResponse implements BaseResponse {
   statusCode: Int!
   success: Boolean!
   message: String
@@ -23,31 +40,70 @@ type ListResponse implements BaseResponse {
   data: [User]
 }
 
-
-type Meta {
-  page: Int!
-  limit: Int!
-  total: Int!
+type AdminListResponse implements BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
+  meta: Meta
+  data: [Admin]
 }
 
+type VendorListResponse implements BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
+  meta: Meta
+  data: [Vendor]
+}
+
+type CustomerListResponse implements BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
+  meta: Meta
+  data: [Customer]
+}
+
+type CategoryResponse implements BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
+  data: Category
+}
+type CategoryListResponse implements BaseResponse {
+  statusCode: Int!
+  success: Boolean!
+  message: String
+  data: [Category]
+}
+
+
+# User Queries
 type Query {
-  me: SingleResponse!
-  admins: ListResponse!
-  vendors: ListResponse!
-  customers: ListResponse!
+  me: UserResponse!
+  admins(page: Int, limit: Int): AdminListResponse!
+  vendors(page: Int, limit: Int): VendorListResponse!
+  customers(page: Int, limit: Int): CustomerListResponse!
   getAllUsers(
     page: Int
     limit: Int
     role: String
-    status: String
+    status: UserStatus
     searchTerm: String
-  ): ListResponse!
+  ): UserListResponse!
+  
+  categories: CategoryListResponse!
+  category(id: ID!): CategoryResponse!
 }
 
+# User Mutations
 type Mutation {
-  userSignUp(input: UserSignUpInput!): SingleResponse!
+  userSignUp(input: UserSignUpInput!): UserResponse!
   login(input: LoginInput!): LoginResponse!
-  updateUserStatus(input: UpdateUserStatusInput!): SingleResponse!
+  updateUserStatus(input: UpdateUserStatusInput!): UserResponse!
+  createCategory(input: CreateCategoryInput!): CategoryResponse!
+  updateCategory(id: ID!, input: UpdateCategoryInput!): CategoryResponse!
+  deleteCategory(id: ID!): CategoryResponse!
 }
 
 input UserSignUpInput {
@@ -64,11 +120,6 @@ input UserSignUpInput {
 input LoginInput {
   email: String!
   password: String!
-}
-
-type LoginResponse {
-  message: String!
-  accessToken: String!
 }
 
 
@@ -99,32 +150,32 @@ type Admin {
 }
 
  type Vendor{
-    id :                    ID!
-    name :                  String!
-    email :                 String!
-    contactNumber :         String!
+    id:                    ID!
+    name:                  String!
+    email:                 String!
+    contactNumber:         String!
     emergencyContactNumber: String!
-    gender :                String!
-    profileImg  :           String!
-    address     :           String!
-    isDeleted :             Boolean!
-    createdAt   :           String!
-    updatedAt  :            String!
+    gender:                String!
+    profileImg:           String!
+    address:             String!
+    isDeleted:             Boolean!
+    createdAt:           String!
+    updatedAt:            String!
  }
 
 
  type Customer{
-    id :                    ID!
-    name :                  String!
-    email :                 String!
-    contactNumber :         String!
+    id:                    ID!
+    name:                  String!
+    email:                 String!
+    contactNumber:         String!
     emergencyContactNumber: String!
-    gender :                String!
-    profileImg  :           String!
-    address     :           String!
-    isDeleted :             Boolean!
-    createdAt   :           String!
-    updatedAt  :            String!
+    gender:                String!
+    profileImg:           String!
+    address:           String!
+    isDeleted:             Boolean!
+    createdAt:           String!
+    updatedAt:            String!
  }
 
 input UpdateUserStatusInput {
@@ -139,6 +190,28 @@ enum UserStatus {
   BLOCKED
   SUSPENDED
   DELETED
+}
+
+
+input CreateCategoryInput {
+  name: String!
+  categoryCode: String!
+  image: Upload!
+}
+
+input UpdateCategoryInput {
+  name: String
+  categoryCode: String
+  image: Upload
+}
+
+type Category {
+  id: ID!
+  name: String!
+  image: String!
+  categoryCode: String!
+  createdAt: String!
+  updatedAt: String!
 }
  
 `;

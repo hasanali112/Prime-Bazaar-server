@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { UserRole, UserStatus } from "@prisma/client";
 import { TLoginType, TPrisma, TUserType } from "./auth.interface";
 import { ManagePassword } from "../../helper/handlePassword";
@@ -122,6 +124,8 @@ export const authResolver = {
       }; SameSite=Strict; Path=/; Max-Age=${30 * 24 * 60 * 60}`,
     ]);
     return {
+      statusCode: 200,
+      success: true,
       message: "Login Successfully",
       accessToken,
     };

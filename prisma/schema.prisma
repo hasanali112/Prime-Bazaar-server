@@ -94,6 +94,17 @@ model SuspendedUser {
   @@map("suspended_users")
 }
 
+model Category {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  image        String
+  categoryCode String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("categories")
+}
+
 enum Gender {
   MALE
   FEMALE
