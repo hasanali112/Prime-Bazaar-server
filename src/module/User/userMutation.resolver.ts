@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient, UserRole, UserStatus } from "@prisma/client";
 import AppError from "../../error/AppError";
 import { TUpdateUserStatusType } from "./user.interface";
@@ -6,7 +7,7 @@ export const userMutationResolver = {
   updateUserStatus: async (
     parent: any,
     args: TUpdateUserStatusType,
-    { prisma, userInfo, res }: any
+    { prisma, userInfo }: any
   ) => {
     if (userInfo.role !== UserRole.ADMIN) {
       throw new AppError(

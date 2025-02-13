@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { UserRole, UserStatus } from "@prisma/client";
 import AppError from "../../error/AppError";
 
 export const userQueryResolver = {
-  me: async (parent: any, args: any, { prisma, userInfo, res }: any) => {
+  me: async (parent: any, args: any, { prisma, userInfo }: any) => {
     if (!userInfo) {
       throw new AppError("Authentication required", "UNAUTHORIZED");
     }
@@ -117,6 +118,7 @@ export const userQueryResolver = {
         },
       };
     } catch (error) {
+      console.error("Error fetching users:", error);
       throw new AppError("Error fetching users", "INTERNAL_SERVER_ERROR");
     }
   },
