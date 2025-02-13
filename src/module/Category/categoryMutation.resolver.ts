@@ -112,4 +112,39 @@ export const categoryMutationResolver = {
       data: updatedCategory,
     };
   },
+
+  deleteCategory: async (
+    _parent: any,
+    { id }: { id: string },
+    { prisma, userInfo }: any
+  ) => {
+    // Guard to check if the user is an Admin
+    if (userInfo.role !== UserRole.ADMIN) {
+      throw new AppError(
+        "You do not have permission to access this data",
+        "FORBIDDEN"
+      );
+    }
+
+    // Check if category exists
+    const existingCategory = await prisma.category.findUnique({
+      where: { id },
+    });
+
+    if (!existingCategory) {
+      throw new AppError("Category not found", "NOT_FOUND");
+    }
+
+    // Delete category from the database
+    await prisma.category.delete({
+      where: { id },
+    });
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Category deleted successfully",
+      data: null,
+    };
+  },
 };

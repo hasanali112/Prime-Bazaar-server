@@ -78,7 +78,7 @@ type CategoryListResponse implements BaseResponse {
 }
 
 
-# User Queries
+#  Queries
 type Query {
   me: UserResponse!
   admins(page: Int, limit: Int): AdminListResponse!
@@ -96,7 +96,7 @@ type Query {
   category(id: ID!): CategoryResponse!
 }
 
-# User Mutations
+#  Mutations
 type Mutation {
   userSignUp(input: UserSignUpInput!): UserResponse!
   login(input: LoginInput!): LoginResponse!
