@@ -2,115 +2,236 @@
 
 import { UserRole } from "@prisma/client";
 import AppError from "../../error/AppError";
-import { uploadSingleImageToCloudinary } from "../../utils/upload";
+import { handleResolver } from "../../utils/handleResolver";
 
 export const categoryMutationResolver = {
-  createCategory: async (
+  createMainCategory: async (
     _parent: any,
-    { input }: { input: { name: string; image: File; categoryCode: string } },
+    { input }: { input: { name: string; description?: string } },
     { prisma, userInfo }: any
   ) => {
-    const { name, image, categoryCode } = input;
-    // Guard to check if the user is an Admin
-    if (userInfo.role !== UserRole.ADMIN) {
-      throw new AppError(
-        "You do not have permission to access this data",
-        "FORBIDDEN"
-      );
-    }
+    return handleResolver(async () => {
+      // Guard to check if the user is an Admin
+      if (userInfo.role !== UserRole.ADMIN) {
+        throw new AppError(
+          "You are not authorized to perform this action",
+          "FORBIDDEN"
+        );
+      }
 
-    // Upload image to Cloudinary
-    const uploadedImage: any = await uploadSingleImageToCloudinary(
-      image,
-      "categories"
-    );
+      const existingCategory = await prisma.mainCategory.findUnique({
+        where: { name: input.name },
+      });
 
-    // For multiple images
-    // const multipleImagesResults = await uploadMultipleImagesToCloudinary(
-    //   [image],
-    //   "categories"
-    // );
+      if (existingCategory) {
+        throw new AppError("Category already exists", "BAD_REQUEST");
+      }
 
-    // Save category to the database
-    const category = await prisma.category.create({
-      data: {
-        name,
-        image: uploadedImage.secure_url, // Save Cloudinary URL
-        // multipleImages: multipleImagesResults.map(
-        //   (result) => result.secure_url
-        // ),
-        categoryCode,
-      },
+      const category = await prisma.mainCategory.create({
+        data: input,
+        include: {
+          subCategories: true,
+        },
+      });
+
+      return {
+        success: true,
+        statusCode: 201,
+        message: "Main category created successfully",
+        data: category,
+      };
     });
-
-    return {
-      statusCode: 201,
-      success: true,
-      message: "Category created successfully",
-      data: category,
-    };
   },
 
-  updateCategory: async (
+  createSubCategory: async (
     _parent: any,
     {
-      id,
       input,
     }: {
-      id: string;
-      input: { name?: string; image?: File; categoryCode?: string };
+      input: { name: string; description?: string; mainCategoryId: string };
     },
     { prisma, userInfo }: any
   ) => {
-    // Guard to check if the user is an Admin
-    if (userInfo.role !== UserRole.ADMIN) {
-      throw new AppError(
-        "You do not have permission to access this data",
-        "FORBIDDEN"
-      );
-    }
+    return handleResolver(async () => {
+      // Guard to check if the user is an Admin
+      if (userInfo.role !== UserRole.ADMIN) {
+        throw new AppError(
+          "You are not authorized to perform this action",
+          "FORBIDDEN"
+        );
+      }
 
-    // Check if category exists
-    const existingCategory = await prisma.category.findUnique({
-      where: { id },
+      // Check if main category exists
+      const mainCategory = await prisma.mainCategory.findUnique({
+        where: { id: input.mainCategoryId },
+      });
+
+      if (!mainCategory) {
+        throw new AppError("Main category not found", "NOT_FOUND");
+      }
+
+      const existingCategory = await prisma.subCategory.findUnique({
+        where: { name: input.name },
+      });
+
+      if (existingCategory) {
+        throw new AppError("Category already exists", "BAD_REQUEST");
+      }
+
+      const subCategory = await prisma.subCategory.create({
+        data: input,
+        include: {
+          mainCategory: true,
+          itemCategories: true,
+        },
+      });
+
+      return {
+        success: true,
+        statusCode: 201,
+        message: "Sub category created successfully",
+        data: subCategory,
+      };
     });
+  },
 
-    if (!existingCategory) {
-      throw new AppError("Category not found", "NOT_FOUND");
-    }
+  createItemCategory: async (
+    _parent: any,
+    {
+      input,
+    }: { input: { name: string; description?: string; subCategoryId: string } },
+    { prisma, userInfo }: any
+  ) => {
+    return handleResolver(async () => {
+      // Guard to check if the user is an Admin
+      if (userInfo.role !== UserRole.ADMIN) {
+        throw new AppError(
+          "You are not authorized to perform this action",
+          "FORBIDDEN"
+        );
+      }
 
-    // Prepare update data
-    const updateData: any = {};
+      // Check if main category exists
+      // Check if sub category exists
+      const subCategory = await prisma.subCategory.findUnique({
+        where: { id: input.subCategoryId },
+      });
 
-    if (input.name) {
-      updateData.name = input.name;
-    }
+      if (!subCategory) {
+        throw new AppError("Sub category not found", "NOT_FOUND");
+      }
 
-    if (input.categoryCode) {
-      updateData.categoryCode = input.categoryCode;
-    }
+      const existingCategory = await prisma.itemCategory.findUnique({
+        where: { name: input.name },
+      });
 
-    // Handle image upload if new image is provided
-    if (input.image) {
-      const uploadedImage: any = await uploadSingleImageToCloudinary(
-        input.image,
-        "categories"
-      );
-      updateData.image = uploadedImage.secure_url;
-    }
+      if (existingCategory) {
+        throw new AppError("Category already exists", "BAD_REQUEST");
+      }
 
-    // Update category in the database
-    const updatedCategory = await prisma.category.update({
-      where: { id },
-      data: updateData,
+      const itemCategory = await prisma.itemCategory.create({
+        data: input,
+        include: {
+          subCategory: true,
+        },
+      });
+
+      return {
+        success: true,
+        statusCode: 201,
+        message: "Item category created successfully",
+        data: itemCategory,
+      };
     });
+  },
 
-    return {
-      statusCode: 200,
-      success: true,
-      message: "Category updated successfully",
-      data: updatedCategory,
-    };
+  // Dynamic resolver to update any type of category
+  updateCategory: async (
+    _parent: any,
+    {
+      input,
+    }: {
+      input: {
+        categoryId: string;
+        categoryType: "MAIN" | "SUB" | "ITEM";
+        name?: string;
+        description?: string;
+      };
+    },
+    { prisma, userInfo }: any
+  ) => {
+    return handleResolver(async () => {
+      // Guard to check if the user is an Admin
+      if (userInfo.role !== UserRole.ADMIN) {
+        throw new AppError(
+          "You are not authorized to perform this action",
+          "FORBIDDEN"
+        );
+      }
+
+      // Destructure input
+      const { categoryId, categoryType, name, description } = input;
+
+      // Initialize category data
+      let categoryData: any;
+
+      // Handle dynamic category update logic
+      switch (categoryType) {
+        case "MAIN":
+          categoryData = await prisma.mainCategory.findUnique({
+            where: { id: categoryId },
+          });
+          if (!categoryData) {
+            throw new AppError("Main category not found", "NOT_FOUND");
+          }
+          // Update Main Category
+          categoryData = await prisma.mainCategory.update({
+            where: { id: categoryId },
+            data: { name, description },
+          });
+          break;
+
+        case "SUB":
+          categoryData = await prisma.subCategory.findUnique({
+            where: { id: categoryId },
+          });
+          if (!categoryData) {
+            throw new AppError("Sub category not found", "NOT_FOUND");
+          }
+          // Update Sub Category
+          categoryData = await prisma.subCategory.update({
+            where: { id: categoryId },
+            data: { name, description },
+          });
+          break;
+
+        case "ITEM":
+          categoryData = await prisma.itemCategory.findUnique({
+            where: { id: categoryId },
+          });
+          if (!categoryData) {
+            throw new AppError("Item category not found", "NOT_FOUND");
+          }
+          // Update Item Category
+          categoryData = await prisma.itemCategory.update({
+            where: { id: categoryId },
+            data: { name, description },
+          });
+          break;
+
+        default:
+          throw new AppError("Invalid category type", "BAD_REQUEST");
+      }
+
+      return {
+        success: true,
+        statusCode: 200,
+        message: `${
+          categoryType.charAt(0).toUpperCase() + categoryType.slice(1)
+        } category updated successfully`,
+        data: categoryData,
+      };
+    });
   },
 
   deleteCategory: async (

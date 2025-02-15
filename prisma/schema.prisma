@@ -94,15 +94,45 @@ model SuspendedUser {
   @@map("suspended_users")
 }
 
-model Category {
-  id           String   @id @default(uuid())
-  name         String   @unique
-  image        String
-  categoryCode String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model MainCategory {
+  id            String        @id @default(uuid())
+  name          String        @unique
+  description   String?
+  isDeleted     Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  subCategories SubCategory[]
 
-  @@map("categories")
+  @@map("main_categories")
+}
+
+model SubCategory {
+  id             String         @id @default(uuid())
+  name           String
+  description    String?
+  isDeleted      Boolean        @default(false)
+  mainCategoryId String
+  mainCategory   MainCategory   @relation(fields: [mainCategoryId], references: [id])
+  itemCategories ItemCategory[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([name, mainCategoryId])
+  @@map("sub_categories")
+}
+
+model ItemCategory {
+  id            String      @id @default(uuid())
+  name          String
+  description   String?
+  isDeleted     Boolean     @default(false)
+  subCategoryId String
+  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([name, subCategoryId])
+  @@map("item_categories")
 }
 
 enum Gender {
