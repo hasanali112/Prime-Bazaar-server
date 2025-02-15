@@ -123,6 +123,12 @@ type MainCategoryResponse implements BaseResponse {
     data: [ItemCategory]
   }
 
+  type CategoryUpdateResponse implements BaseResponse {
+    statusCode: Int!
+    success: Boolean!
+    message: String!
+    data: CategoryResult
+  }
 
 #  Queries
 type Query {
@@ -151,18 +157,20 @@ type Mutation {
   userSignUp(input: UserSignUpInput!): UserResponse!
   login(input: LoginInput!): LoginResponse!
   updateUserStatus(input: UpdateUserStatusInput!): UserResponse!
-  
+
     createMainCategory(input: CreateMainCategoryInput!): MainCategoryResponse!
-    updateMainCategory(id: ID!, input: UpdateMainCategoryInput!): MainCategoryResponse!
     deleteMainCategory(id: ID!): MainCategoryResponse!
 
     createSubCategory(input: CreateSubCategoryInput!): SubCategoryResponse!
-    updateSubCategory(id: ID!, input: UpdateSubCategoryInput!): SubCategoryResponse!
     deleteSubCategory(id: ID!): SubCategoryResponse!
 
     createItemCategory(input: CreateItemCategoryInput!): ItemCategoryResponse!
-    updateItemCategory(id: ID!, input: UpdateItemCategoryInput!): ItemCategoryResponse!
     deleteItemCategory(id: ID!): ItemCategoryResponse!
+
+    updateCategory(
+      id: ID!, 
+      input: UpdateCategoryInput!
+    ): CategoryUpdateResponse!
 }
 
 
@@ -285,21 +293,10 @@ input CreateMainCategoryInput {
     description: String
   }
 
-  input UpdateMainCategoryInput {
-    name: String
-    description: String
-  }
-
   input CreateSubCategoryInput {
     name: String!
     description: String
     mainCategoryId: ID!
-  }
-
-  input UpdateSubCategoryInput {
-    name: String
-    description: String
-    mainCategoryId: ID
   }
 
   input CreateItemCategoryInput {
@@ -308,12 +305,15 @@ input CreateMainCategoryInput {
     subCategoryId: ID!
   }
 
-  input UpdateItemCategoryInput {
+  input UpdateCategoryInput {
     name: String
     description: String
-    subCategoryId: ID
+    categoryType: CategoryType!
+    parentId: ID    # Optional: Used for updating parent relationships
   }
 
+  # Union type to handle different category types
+  union CategoryResult = MainCategory | SubCategory | ItemCategory
 
   #enum
   enum UserStatus {
@@ -322,5 +322,11 @@ input CreateMainCategoryInput {
   SUSPENDED
   DELETED
 }
+
+enum CategoryType {
+    MAIN
+    SUB
+    ITEM
+  }
  
 `;
