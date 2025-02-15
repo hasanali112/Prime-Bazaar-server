@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import AppError from "../../error/AppError";
+import { handleResolver } from "../../utils/handleResolver";
 
 export const categoryQueryResolver = {
   getAllCategories: async (
@@ -7,7 +8,7 @@ export const categoryQueryResolver = {
     { page = 1, limit = 10, searchTerm }: any,
     { prisma }: any
   ) => {
-    try {
+    return handleResolver(async () => {
       const skip = (page - 1) * limit;
       const where = searchTerm
         ? { name: { contains: searchTerm, mode: "insensitive" } }
@@ -26,22 +27,14 @@ export const categoryQueryResolver = {
         statusCode: 200,
         success: true,
         message: "Categories fetched successfully",
-        data: categories,
         meta: { page, limit, total },
+        data: categories,
       };
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      return {
-        statusCode: 500,
-        success: false,
-        message: "Error fetching categories",
-        data: [],
-      };
-    }
+    });
   },
 
   category: async (_parent: any, { id }: { id: string }, { prisma }: any) => {
-    try {
+    handleResolver(async () => {
       const category = await prisma.category.findUnique({ where: { id } });
 
       if (!category) {
@@ -54,14 +47,6 @@ export const categoryQueryResolver = {
         message: "Category fetched successfully",
         data: category,
       };
-    } catch (error) {
-      console.error("Error fetching category:", error);
-      return {
-        statusCode: 500,
-        success: false,
-        message: "Error fetching category",
-        data: null,
-      };
-    }
+    });
   },
 };

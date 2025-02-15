@@ -74,8 +74,54 @@ type CategoryListResponse implements BaseResponse {
   statusCode: Int!
   success: Boolean!
   message: String
+  meta: Meta
   data: [Category]
 }
+
+type MainCategoryResponse implements BaseResponse {
+    statusCode: Int!
+    success: Boolean!
+    message: String
+    data: MainCategory
+  }
+
+  type MainCategoryListResponse implements BaseResponse {
+    statusCode: Int!
+    success: Boolean!
+    message: String
+    meta: Meta
+    data: [MainCategory]
+  }
+
+  type SubCategoryResponse implements BaseResponse {
+    statusCode: Int!
+    success: Boolean!
+    message: String
+    data: SubCategory
+  }
+
+  type SubCategoryListResponse implements BaseResponse {
+    statusCode: Int!
+    success: Boolean!
+    message: String
+    meta: Meta
+    data: [SubCategory]
+  }
+
+  type ItemCategoryResponse implements BaseResponse {
+    statusCode: Int!
+    success: Boolean!
+    message: String
+    data: ItemCategory
+  }
+
+  type ItemCategoryListResponse implements BaseResponse {
+    statusCode: Int!
+    success: Boolean!
+    message: String
+    meta: Meta
+    data: [ItemCategory]
+  }
 
 
 #  Queries
@@ -92,8 +138,12 @@ type Query {
     searchTerm: String
   ): UserListResponse!
   
-  getAllCategories: CategoryListResponse!
-  category(id: ID!): CategoryResponse!
+    mainCategories(page: Int, limit: Int, searchTerm: String): MainCategoryListResponse!
+    mainCategory(id: ID!): MainCategoryResponse!
+    subCategories(mainCategoryId: ID!, page: Int, limit: Int, searchTerm: String): SubCategoryListResponse!
+    subCategory(id: ID!): SubCategoryResponse!
+    itemCategories(subCategoryId: ID!, page: Int, limit: Int, searchTerm: String): ItemCategoryListResponse!
+    itemCategory(id: ID!): ItemCategoryResponse!
 }
 
 #  Mutations
@@ -101,28 +151,23 @@ type Mutation {
   userSignUp(input: UserSignUpInput!): UserResponse!
   login(input: LoginInput!): LoginResponse!
   updateUserStatus(input: UpdateUserStatusInput!): UserResponse!
-  createCategory(input: CreateCategoryInput!): CategoryResponse!
-  updateCategory(id: ID!, input: UpdateCategoryInput!): CategoryResponse!
-  deleteCategory(id: ID!): CategoryResponse!
-}
+  
+    createMainCategory(input: CreateMainCategoryInput!): MainCategoryResponse!
+    updateMainCategory(id: ID!, input: UpdateMainCategoryInput!): MainCategoryResponse!
+    deleteMainCategory(id: ID!): MainCategoryResponse!
 
-input UserSignUpInput {
-  email: String!
-  password: String!
-  role: String!
-  name: String!
-  contactNumber: String!
-  emergencyContactNumber: String!
-  gender: String!
-  address: String!
-}
+    createSubCategory(input: CreateSubCategoryInput!): SubCategoryResponse!
+    updateSubCategory(id: ID!, input: UpdateSubCategoryInput!): SubCategoryResponse!
+    deleteSubCategory(id: ID!): SubCategoryResponse!
 
-input LoginInput {
-  email: String!
-  password: String!
+    createItemCategory(input: CreateItemCategoryInput!): ItemCategoryResponse!
+    updateItemCategory(id: ID!, input: UpdateItemCategoryInput!): ItemCategoryResponse!
+    deleteItemCategory(id: ID!): ItemCategoryResponse!
 }
 
 
+
+#type
 type User {
   id: ID!
   email: String!
@@ -178,6 +223,54 @@ type Admin {
     updatedAt:            String!
  }
 
+# Category type
+type MainCategory {
+    id: ID!
+    name: String!
+    description: String
+    subCategories: [SubCategory!]
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  type SubCategory {
+    id: ID!
+    name: String!
+    description: String
+    mainCategory: MainCategory!
+    itemCategories: [ItemCategory!]
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  type ItemCategory {
+    id: ID!
+    name: String!
+    description: String
+    subCategory: SubCategory!
+    createdAt: String!
+    updatedAt: String!
+  }
+
+
+#input
+#User input
+input UserSignUpInput {
+  email: String!
+  password: String!
+  role: String!
+  name: String!
+  contactNumber: String!
+  emergencyContactNumber: String!
+  gender: String!
+  address: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
 input UpdateUserStatusInput {
   userId: ID!
   status: UserStatus!
@@ -185,33 +278,49 @@ input UpdateUserStatusInput {
   endTime: String
 }
 
-enum UserStatus {
+
+# Category input
+input CreateMainCategoryInput {
+    name: String!
+    description: String
+  }
+
+  input UpdateMainCategoryInput {
+    name: String
+    description: String
+  }
+
+  input CreateSubCategoryInput {
+    name: String!
+    description: String
+    mainCategoryId: ID!
+  }
+
+  input UpdateSubCategoryInput {
+    name: String
+    description: String
+    mainCategoryId: ID
+  }
+
+  input CreateItemCategoryInput {
+    name: String!
+    description: String
+    subCategoryId: ID!
+  }
+
+  input UpdateItemCategoryInput {
+    name: String
+    description: String
+    subCategoryId: ID
+  }
+
+
+  #enum
+  enum UserStatus {
   ACTIVE
   BLOCKED
   SUSPENDED
   DELETED
-}
-
-
-input CreateCategoryInput {
-  name: String!
-  categoryCode: String!
-  image: Upload!
-}
-
-input UpdateCategoryInput {
-  name: String
-  categoryCode: String
-  image: Upload
-}
-
-type Category {
-  id: ID!
-  name: String!
-  image: String!
-  categoryCode: String!
-  createdAt: String!
-  updatedAt: String!
 }
  
 `;

@@ -1,58 +1,61 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { UserRole, UserStatus } from "@prisma/client";
 import AppError from "../../error/AppError";
+import { handleResolver } from "../../utils/handleResolver";
 
 export const userQueryResolver = {
   me: async (parent: any, args: any, { prisma, userInfo }: any) => {
-    if (!userInfo) {
-      throw new AppError("Authentication required", "UNAUTHORIZED");
-    }
+    return handleResolver(async () => {
+      if (!userInfo) {
+        throw new AppError("Authentication required", "UNAUTHORIZED");
+      }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userInfo.userId },
-      include: {
-        admin: true,
-        vendor: true,
-        customer: true,
-      },
+      const user = await prisma.user.findUnique({
+        where: { id: userInfo.userId },
+        include: {
+          admin: true,
+          vendor: true,
+          customer: true,
+        },
+      });
+
+      if (!user) {
+        throw new AppError("User not found", "NOT_FOUND");
+      }
+
+      if (
+        user.status === UserStatus.SUSPENDED ||
+        user.status === UserStatus.DELETED
+      ) {
+        throw new AppError("User already suspended or deleted", "BAD_REQUEST");
+      }
+      let profileInfo;
+      if (userInfo.role === UserRole.ADMIN) {
+        profileInfo = await prisma.admin.findUnique({
+          where: {
+            userId: user.id,
+          },
+        });
+      } else if (userInfo.role === UserRole.VENDOR) {
+        profileInfo = await prisma.admin.findUnique({
+          where: {
+            userId: user.id,
+          },
+        });
+      } else if (userInfo.role === UserRole.CUSTOMER) {
+        profileInfo = await prisma.doctor.findUnique({
+          where: {
+            userId: user.id,
+          },
+        });
+      }
+      return {
+        statusCode: 200,
+        success: true,
+        message: "User profile fetched successfully",
+        data: { ...user, ...profileInfo },
+      };
     });
-
-    if (!user) {
-      throw new AppError("User not found", "NOT_FOUND");
-    }
-
-    if (
-      user.status === UserStatus.SUSPENDED ||
-      user.status === UserStatus.DELETED
-    ) {
-      throw new AppError("User already suspended or deleted", "BAD_REQUEST");
-    }
-    let profileInfo;
-    if (userInfo.role === UserRole.ADMIN) {
-      profileInfo = await prisma.admin.findUnique({
-        where: {
-          userId: user.id,
-        },
-      });
-    } else if (userInfo.role === UserRole.VENDOR) {
-      profileInfo = await prisma.admin.findUnique({
-        where: {
-          userId: user.id,
-        },
-      });
-    } else if (userInfo.role === UserRole.CUSTOMER) {
-      profileInfo = await prisma.doctor.findUnique({
-        where: {
-          userId: user.id,
-        },
-      });
-    }
-    return {
-      statusCode: 200,
-      success: true,
-      message: "User profile fetched successfully",
-      data: { ...user, ...profileInfo },
-    };
   },
 
   getAllUsers: async (
@@ -90,7 +93,7 @@ export const userQueryResolver = {
       ];
     }
 
-    try {
+    return handleResolver(async () => {
       // Get the paginated data
       const users = await prisma.user.findMany({
         where: filter,
@@ -117,9 +120,6 @@ export const userQueryResolver = {
           total: totalCount,
         },
       };
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      throw new AppError("Error fetching users", "INTERNAL_SERVER_ERROR");
-    }
+    });
   },
 };
