@@ -92,7 +92,7 @@ type Query {
     searchTerm: String
   ): UserListResponse!
   
-  categories: CategoryListResponse!
+  getAllCategories: CategoryListResponse!
   category(id: ID!): CategoryResponse!
 }
 
