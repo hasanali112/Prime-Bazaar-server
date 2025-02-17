@@ -111,7 +111,6 @@ export const categoryMutationResolver = {
         );
       }
 
-      // Check if main category exists
       // Check if sub category exists
       const subCategory = await prisma.subCategory.findUnique({
         where: { id: input.subCategoryId },
@@ -234,38 +233,38 @@ export const categoryMutationResolver = {
     });
   },
 
-  deleteCategory: async (
-    _parent: any,
-    { id }: { id: string },
-    { prisma, userInfo }: any
-  ) => {
-    // Guard to check if the user is an Admin
-    if (userInfo.role !== UserRole.ADMIN) {
-      throw new AppError(
-        "You do not have permission to access this data",
-        "FORBIDDEN"
-      );
-    }
+  // deleteCategory: async (
+  //   _parent: any,
+  //   { id }: { id: string },
+  //   { prisma, userInfo }: any
+  // ) => {
+  //   // Guard to check if the user is an Admin
+  //   if (userInfo.role !== UserRole.ADMIN) {
+  //     throw new AppError(
+  //       "You do not have permission to access this data",
+  //       "FORBIDDEN"
+  //     );
+  //   }
 
-    // Check if category exists
-    const existingCategory = await prisma.category.findUnique({
-      where: { id },
-    });
+  //   // Check if category exists
+  //   const existingCategory = await prisma.category.findUnique({
+  //     where: { id },
+  //   });
 
-    if (!existingCategory) {
-      throw new AppError("Category not found", "NOT_FOUND");
-    }
+  //   if (!existingCategory) {
+  //     throw new AppError("Category not found", "NOT_FOUND");
+  //   }
 
-    // Delete category from the database
-    await prisma.category.delete({
-      where: { id },
-    });
+  //   // Delete category from the database
+  //   await prisma.category.delete({
+  //     where: { id },
+  //   });
 
-    return {
-      statusCode: 200,
-      success: true,
-      message: "Category deleted successfully",
-      data: null,
-    };
-  },
+  //   return {
+  //     statusCode: 200,
+  //     success: true,
+  //     message: "Category deleted successfully",
+  //     data: null,
+  //   };
+  // },
 };
