@@ -1,52 +1,53 @@
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-// import AppError from "../../error/AppError";
-// import { handleResolver } from "../../utils/handleResolver";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-// export const categoryQueryResolver = {
-//   getAllCategories: async (
-//     parent: any,
-//     { page = 1, limit = 10, searchTerm }: any,
-//     { prisma }: any
-//   ) => {
-//     return handleResolver(async () => {
-//       const skip = (page - 1) * limit;
-//       const where = searchTerm
-//         ? { name: { contains: searchTerm, mode: "insensitive" } }
-//         : {};
+import { Prisma } from "@prisma/client";
+import { handleResolver } from "../../utils/handleResolver";
 
-//       const categories = await prisma.category.findMany({
-//         where,
-//         skip,
-//         take: limit,
-//         orderBy: { createdAt: "desc" },
-//       });
+export const categoryQueryResolver = {
+  mainCategories: async (
+    parent: any,
+    { page = 1, limit = 10, searchTerm }: any,
+    { prisma }: any
+  ) => {
+    return handleResolver(async () => {
+      const skip = (page - 1) * limit;
+      const andConditions: Prisma.MainCategoryWhereInput[] = [];
+      if (searchTerm) {
+        andConditions.push({
+          OR: [{ name: { contains: searchTerm, mode: "insensitive" } }],
+        });
+      }
 
-//       const total = await prisma.category.count({ where });
+      andConditions.push({
+        isDeleted: false,
+      });
 
-//       return {
-//         statusCode: 200,
-//         success: true,
-//         message: "Categories fetched successfully",
-//         meta: { page, limit, total },
-//         data: categories,
-//       };
-//     });
-//   },
+      const whereConditions: Prisma.MainCategoryWhereInput =
+        andConditions.length > 0 ? { AND: andConditions } : {};
 
-//   category: async (_parent: any, { id }: { id: string }, { prisma }: any) => {
-//     handleResolver(async () => {
-//       const category = await prisma.category.findUnique({ where: { id } });
+      const mainCategories = await prisma.mainCategory.findMany({
+        where: whereConditions,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: {
+          subCategories: {
+            include: {
+              itemCategories: true,
+            },
+          },
+        },
+      });
 
-//       if (!category) {
-//         throw new AppError("Category not found", "NOT_FOUND");
-//       }
+      const total = await prisma.mainCategory.count({ where: whereConditions });
 
-//       return {
-//         statusCode: 200,
-//         success: true,
-//         message: "Category fetched successfully",
-//         data: category,
-//       };
-//     });
-//   },
-// };
+      return {
+        statusCode: 200,
+        success: true,
+        message: "Main categories fetched successfully",
+        meta: { page, limit, total },
+        data: mainCategories,
+      };
+    });
+  },
+};

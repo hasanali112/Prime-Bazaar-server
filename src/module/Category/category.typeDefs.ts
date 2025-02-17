@@ -56,6 +56,7 @@ export const CategoryTypeDefs = `#graphql
     name: String!
     description: String
     subCategories: [SubCategory!]
+  
     createdAt: String!
     updatedAt: String!
   }
@@ -100,7 +101,6 @@ export const CategoryTypeDefs = `#graphql
     name: String
     description: String
     categoryType: CategoryType!
-    parentId: ID
   }
 
   union CategoryResult = MainCategory | SubCategory | ItemCategory

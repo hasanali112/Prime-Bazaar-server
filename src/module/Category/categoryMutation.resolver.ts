@@ -20,7 +20,7 @@ export const categoryMutationResolver = {
       }
 
       const existingCategory = await prisma.mainCategory.findUnique({
-        where: { name: input.name },
+        where: { name: input.name, isDeleted: false },
       });
 
       if (existingCategory) {
@@ -63,7 +63,7 @@ export const categoryMutationResolver = {
 
       // Check if main category exists
       const mainCategory = await prisma.mainCategory.findUnique({
-        where: { id: input.mainCategoryId },
+        where: { id: input.mainCategoryId, isDeleted: false },
       });
 
       if (!mainCategory) {
@@ -71,7 +71,7 @@ export const categoryMutationResolver = {
       }
 
       const existingCategory = await prisma.subCategory.findUnique({
-        where: { name: input.name },
+        where: { name: input.name, isDeleted: false },
       });
 
       if (existingCategory) {
@@ -113,7 +113,7 @@ export const categoryMutationResolver = {
 
       // Check if sub category exists
       const subCategory = await prisma.subCategory.findUnique({
-        where: { id: input.subCategoryId },
+        where: { id: input.subCategoryId, isDeleted: false },
       });
 
       if (!subCategory) {
@@ -121,7 +121,7 @@ export const categoryMutationResolver = {
       }
 
       const existingCategory = await prisma.itemCategory.findUnique({
-        where: { name: input.name },
+        where: { name: input.name, isDeleted: false },
       });
 
       if (existingCategory) {
@@ -148,10 +148,11 @@ export const categoryMutationResolver = {
   updateCategory: async (
     _parent: any,
     {
+      id,
       input,
     }: {
+      id: string;
       input: {
-        categoryId: string;
         categoryType: "MAIN" | "SUB" | "ITEM";
         name?: string;
         description?: string;
@@ -169,7 +170,12 @@ export const categoryMutationResolver = {
       }
 
       // Destructure input
-      const { categoryId, categoryType, name, description } = input;
+      const { categoryType, name, description } = input;
+
+      // Initialize update data
+      const updateData: { name?: string; description?: string } = {};
+      if (name) updateData.name = name;
+      if (description) updateData.description = description;
 
       // Initialize category data
       let categoryData: any;
@@ -178,44 +184,44 @@ export const categoryMutationResolver = {
       switch (categoryType) {
         case "MAIN":
           categoryData = await prisma.mainCategory.findUnique({
-            where: { id: categoryId },
+            where: { id },
           });
           if (!categoryData) {
             throw new AppError("Main category not found", "NOT_FOUND");
           }
-          // Update Main Category
           categoryData = await prisma.mainCategory.update({
-            where: { id: categoryId },
-            data: { name, description },
+            where: { id },
+            data: updateData,
           });
+          categoryData.__typename = "MainCategory"; // Add typename
           break;
 
         case "SUB":
           categoryData = await prisma.subCategory.findUnique({
-            where: { id: categoryId },
+            where: { id },
           });
           if (!categoryData) {
             throw new AppError("Sub category not found", "NOT_FOUND");
           }
-          // Update Sub Category
           categoryData = await prisma.subCategory.update({
-            where: { id: categoryId },
-            data: { name, description },
+            where: { id },
+            data: updateData,
           });
+          categoryData.__typename = "SubCategory"; // Add typename
           break;
 
         case "ITEM":
           categoryData = await prisma.itemCategory.findUnique({
-            where: { id: categoryId },
+            where: { id },
           });
           if (!categoryData) {
             throw new AppError("Item category not found", "NOT_FOUND");
           }
-          // Update Item Category
           categoryData = await prisma.itemCategory.update({
-            where: { id: categoryId },
-            data: { name, description },
+            where: { id },
+            data: updateData,
           });
+          categoryData.__typename = "ItemCategory"; // Add typename
           break;
 
         default:
