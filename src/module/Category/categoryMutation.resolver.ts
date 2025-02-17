@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
 import AppError from "../../error/AppError";
 import { handleResolver } from "../../utils/handleResolver";
 
@@ -233,38 +233,69 @@ export const categoryMutationResolver = {
     });
   },
 
-  // deleteCategory: async (
-  //   _parent: any,
-  //   { id }: { id: string },
-  //   { prisma, userInfo }: any
-  // ) => {
-  //   // Guard to check if the user is an Admin
-  //   if (userInfo.role !== UserRole.ADMIN) {
-  //     throw new AppError(
-  //       "You do not have permission to access this data",
-  //       "FORBIDDEN"
-  //     );
-  //   }
+  deleteMainCategory: async (
+    _parent: any,
+    { id }: { id: string },
+    { prisma, userInfo }: any
+  ) => {
+    return handleResolver(async () => {
+      // Guard to check if the user is an Admin
+      if (userInfo.role !== UserRole.ADMIN) {
+        throw new AppError(
+          "You are not authorized to perform this action",
+          "FORBIDDEN"
+        );
+      }
 
-  //   // Check if category exists
-  //   const existingCategory = await prisma.category.findUnique({
-  //     where: { id },
-  //   });
+      // Check if main category exists
+      const mainCategory = await prisma.mainCategory.findUnique({
+        where: { id },
+        include: {
+          subCategories: {
+            include: {
+              itemCategories: true,
+            },
+          },
+        },
+      });
 
-  //   if (!existingCategory) {
-  //     throw new AppError("Category not found", "NOT_FOUND");
-  //   }
+      if (!mainCategory) {
+        throw new AppError("Main category not found", "NOT_FOUND");
+      }
 
-  //   // Delete category from the database
-  //   await prisma.category.delete({
-  //     where: { id },
-  //   });
+      // Start a transaction to ensure all related deletions succeed or none do
+      const deleted = await prisma.$transaction(
+        async (tx: Prisma.TransactionClient) => {
+          // First, delete all related item categories
+          for (const subCategory of mainCategory.subCategories) {
+            await tx.itemCategory.deleteMany({
+              where: {
+                subCategoryId: subCategory.id,
+              },
+            });
+          }
 
-  //   return {
-  //     statusCode: 200,
-  //     success: true,
-  //     message: "Category deleted successfully",
-  //     data: null,
-  //   };
-  // },
+          // Then delete all sub categories
+          await tx.subCategory.deleteMany({
+            where: {
+              mainCategoryId: id,
+            },
+          });
+
+          // Finally delete the main category
+          return tx.mainCategory.delete({
+            where: { id },
+          });
+        }
+      );
+
+      return {
+        success: true,
+        statusCode: 200,
+        message:
+          "Main category and all related categories deleted successfully",
+        data: deleted,
+      };
+    });
+  },
 };
