@@ -125,4 +125,31 @@ export const categoryQueryResolver = {
       };
     });
   },
+
+  // Fetch a single subcategory by its ID
+  subCategory: async (
+    _parent: any,
+    { id }: { id: string },
+    { prisma }: any
+  ) => {
+    return handleResolver(async () => {
+      const subCategory = await prisma.subCategory.findUnique({
+        where: { id },
+        include: {
+          itemCategories: true, // Fetch related item categories
+        },
+      });
+
+      if (!subCategory) {
+        throw new AppError("Subcategory not found", "NOT_FOUND");
+      }
+
+      return {
+        statusCode: 200,
+        success: true,
+        message: "Subcategory fetched successfully",
+        data: subCategory,
+      };
+    });
+  },
 };
