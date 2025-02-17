@@ -263,38 +263,123 @@ export const categoryMutationResolver = {
         throw new AppError("Main category not found", "NOT_FOUND");
       }
 
-      // Start a transaction to ensure all related deletions succeed or none do
-      const deleted = await prisma.$transaction(
-        async (tx: Prisma.TransactionClient) => {
-          // First, delete all related item categories
-          for (const subCategory of mainCategory.subCategories) {
-            await tx.itemCategory.deleteMany({
-              where: {
-                subCategoryId: subCategory.id,
-              },
-            });
-          }
-
-          // Then delete all sub categories
-          await tx.subCategory.deleteMany({
-            where: {
-              mainCategoryId: id,
+      // Start a transaction to ensure all related updates succeed or none do
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        // First, update all related item categories
+        await tx.itemCategory.updateMany({
+          where: {
+            subCategoryId: {
+              in: mainCategory.subCategories.map((sub: any) => sub.id),
             },
-          });
+          },
+          data: { isDeleted: true },
+        });
 
-          // Finally delete the main category
-          return tx.mainCategory.delete({
-            where: { id },
-          });
-        }
-      );
+        // Then update all sub categories
+        await tx.subCategory.updateMany({
+          where: { mainCategoryId: id },
+          data: { isDeleted: true },
+        });
+
+        // Finally update the main category
+        await tx.mainCategory.update({
+          where: { id },
+          data: { isDeleted: true },
+        });
+      });
 
       return {
         success: true,
         statusCode: 200,
         message:
-          "Main category and all related categories deleted successfully",
-        data: deleted,
+          "Main category and all related categories marked as deleted successfully",
+      };
+    });
+  },
+
+  deleteSubCategory: async (
+    _parent: any,
+    { id }: { id: string },
+    { prisma, userInfo }: any
+  ) => {
+    return handleResolver(async () => {
+      // Guard to check if the user is an Admin
+      if (userInfo.role !== UserRole.ADMIN) {
+        throw new AppError(
+          "You are not authorized to perform this action",
+          "FORBIDDEN"
+        );
+      }
+
+      // Check if sub-category exists
+      const subCategory = await prisma.subCategory.findUnique({
+        where: { id },
+        include: {
+          itemCategories: true,
+        },
+      });
+
+      if (!subCategory) {
+        throw new AppError("Sub category not found", "NOT_FOUND");
+      }
+
+      // Start a transaction to update related records
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        // First, update all related item categories
+        await tx.itemCategory.updateMany({
+          where: { subCategoryId: id },
+          data: { isDeleted: true },
+        });
+
+        // Then update the sub-category itself
+        await tx.subCategory.update({
+          where: { id },
+          data: { isDeleted: true },
+        });
+      });
+
+      return {
+        success: true,
+        statusCode: 200,
+        message:
+          "Sub category and all related item categories marked as deleted successfully",
+      };
+    });
+  },
+
+  deleteItemCategory: async (
+    _parent: any,
+    { id }: { id: string },
+    { prisma, userInfo }: any
+  ) => {
+    return handleResolver(async () => {
+      // Guard to check if the user is an Admin
+      if (userInfo.role !== UserRole.ADMIN) {
+        throw new AppError(
+          "You are not authorized to perform this action",
+          "FORBIDDEN"
+        );
+      }
+
+      // Check if item category exists
+      const itemCategory = await prisma.itemCategory.findUnique({
+        where: { id },
+      });
+
+      if (!itemCategory) {
+        throw new AppError("Item category not found", "NOT_FOUND");
+      }
+
+      // Update the `isDeleted` field instead of deleting
+      await prisma.itemCategory.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+
+      return {
+        success: true,
+        statusCode: 200,
+        message: "Item category marked as deleted successfully",
       };
     });
   },
