@@ -56,7 +56,6 @@ export const CategoryTypeDefs = `#graphql
     name: String!
     description: String
     subCategories: [SubCategory!]
-  
     createdAt: String!
     updatedAt: String!
   }
@@ -114,9 +113,9 @@ export const CategoryTypeDefs = `#graphql
   type Query {
     mainCategories(page: Int, limit: Int, searchTerm: String): MainCategoryListResponse!
     mainCategory(id: ID!): MainCategoryResponse!
-    subCategories(mainCategoryId: ID!, page: Int, limit: Int, searchTerm: String): SubCategoryListResponse!
+    subCategories( page: Int, limit: Int, searchTerm: String): SubCategoryListResponse!
     subCategory(id: ID!): SubCategoryResponse!
-    itemCategories(subCategoryId: ID!, page: Int, limit: Int, searchTerm: String): ItemCategoryListResponse!
+    itemCategories( page: Int, limit: Int, searchTerm: String): ItemCategoryListResponse!
     itemCategory(id: ID!): ItemCategoryResponse!
   }
 
