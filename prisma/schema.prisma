@@ -108,7 +108,7 @@ model MainCategory {
 
 model SubCategory {
   id             String         @id @default(uuid())
-  name           String
+  name           String         @unique
   description    String?
   isDeleted      Boolean        @default(false)
   mainCategoryId String
@@ -123,7 +123,7 @@ model SubCategory {
 
 model ItemCategory {
   id            String      @id @default(uuid())
-  name          String
+  name          String      @unique
   description   String?
   isDeleted     Boolean     @default(false)
   subCategoryId String
