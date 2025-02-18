@@ -54,11 +54,11 @@ model Vendor {
   gender                 Gender
   profileImg             String?
   address                String
-  // isDeleted              Boolean  @default(false)
   status                 UserStatus @default(ACTIVE)
   createdAt              DateTime   @default(now())
   updatedAt              DateTime   @updatedAt
   user                   User       @relation(fields: [userId], references: [id])
+  shop                   Shop?
 
   @@map("vendors")
 }
@@ -130,9 +130,85 @@ model ItemCategory {
   subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  products      Product[]
 
   @@unique([name, subCategoryId])
   @@map("item_categories")
+}
+
+model Shop {
+  id            String     @id @default(uuid())
+  name          String     @unique
+  logo          String?
+  description   String?
+  email         String     @unique
+  contactNumber String
+  status        ShopStatus @default(ACTIVE)
+  isVerified    Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  vendorId      String     @unique
+  vendor        Vendor     @relation(fields: [vendorId], references: [id])
+  products      Product[]
+
+  @@map("shops")
+}
+
+model Product {
+  id               String         @id @default(uuid())
+  sku              String         @unique
+  name             String
+  description      String?
+  price            Float
+  stockQuantity    Int
+  discountPercent  Float?
+  brand            String
+  itemCategoryId   String
+  shopId           String
+  isFlashSale      Boolean        @default(false)
+  flashSaleEndTime DateTime?
+  shippingMethods  ShippingMethod
+  shippingCharge   Float?
+  status           ProductStatus  @default(ACTIVE)
+  variants         Variant[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  shop             Shop           @relation(fields: [shopId], references: [id])
+  itemCategory     ItemCategory   @relation(fields: [itemCategoryId], references: [id])
+
+  @@map("products")
+}
+
+model Variant {
+  id        String   @id @default(uuid())
+  color     String?
+  images    String[]
+  sizes     String[] @default([])
+  productId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@map("variants")
+}
+
+enum ShippingMethod {
+  FREE_SHIPPING
+  SUNDARBAN_COURIER
+  REDX
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+enum ShopStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  DELETED
 }
 
 enum Gender {
