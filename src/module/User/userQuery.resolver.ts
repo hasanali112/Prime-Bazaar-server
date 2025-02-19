@@ -58,6 +58,32 @@ export const userQueryResolver = {
     });
   },
 
+  getSingleUser: async (
+    parent: any,
+    { id }: { id: string },
+    { prisma }: any
+  ) => {
+    return handleResolver(async () => {
+      const user = await prisma.user.findUnique({
+        where: { id },
+        include: {
+          admin: true,
+          vendor: true,
+          customer: true,
+        },
+      });
+      if (!user) {
+        throw new AppError("User not found", "NOT_FOUND");
+      }
+      return {
+        statusCode: 200,
+        success: true,
+        message: "User fetched successfully",
+        data: user,
+      };
+    });
+  },
+
   getAllUsers: async (
     parent: any,
     { page = 1, limit = 10, role, status, searchTerm }: any,
