@@ -1,4 +1,12 @@
 export const UserTypeDefs = `#graphql
+  type UserResponse implements BaseResponse {
+    statusCode: Int!
+    success: Boolean!
+    message: String
+    meta: Meta
+    data: User
+  }
+
   type UserListResponse implements BaseResponse {
     statusCode: Int!
     success: Boolean!
@@ -23,6 +31,7 @@ export const UserTypeDefs = `#graphql
 
   type Query {
     me: UserResponse!
+    getSingleUser(id: ID!): UserResponse!
     getAllUsers(
       page: Int
       limit: Int
