@@ -71,4 +71,78 @@ export const shopMutationResolver = {
       data: shop,
     };
   },
+
+  updateShop: async (
+    parent: any,
+    {
+      id,
+      input,
+    }: {
+      id: string;
+      input: {
+        name?: string;
+        logo?: File;
+        description?: string;
+        email?: string;
+        contactNumber?: string;
+        isDeleted?: boolean;
+        isTemporaryDeleted?: boolean;
+      };
+    },
+    { prisma, userInfo }: any
+  ) => {
+    // First check if shop exists
+    const shop = await prisma.shop.findUnique({
+      where: { id },
+      include: { vendor: true },
+    });
+
+    if (!shop) {
+      throw new AppError("Shop not found", "NOT_FOUND");
+    }
+
+    // Check permissions - only the owner vendor or admin can update
+    if (
+      userInfo.role !== UserRole.ADMIN &&
+      (userInfo.role !== UserRole.VENDOR ||
+        shop.vendor.userId !== userInfo.userId)
+    ) {
+      throw new AppError(
+        "You don't have permission to update this shop",
+        "FORBIDDEN"
+      );
+    }
+
+    // Prepare update data
+    const updateData: any = { ...input };
+
+    // Handle logo upload if provided
+    if (input.logo) {
+      const uploadedImage: any = await uploadSingleImageToCloudinary(
+        input.logo,
+        "logo"
+      );
+      updateData.logo = uploadedImage.secure_url;
+    }
+
+    // Handle admin-only fields
+    // Remove fields that only admin should be able to update
+    // if (userInfo.role !== UserRole.ADMIN) {
+    //   delete updateData.isDeleted;
+    //   delete updateData.isTemporaryDeleted;
+    // }
+
+    // Update shop
+    const updatedShop = await prisma.shop.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Shop updated successfully",
+      data: updatedShop,
+    };
+  },
 };
