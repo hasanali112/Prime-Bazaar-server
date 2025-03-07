@@ -3,14 +3,14 @@ export const ShopTypeDefs = `#graphql
   type Shop {
     id: ID!
     name: String!
-    logo: String!
+    logo: String
     description: String
     email: String!
     contactNumber: String!
     status: ShopStatus!
     isVerified: Boolean!
     isDeleted: Boolean!
-    isTemporaryDeleted: Boolean!
+    isTemporaryDelete: Boolean!
     createdAt: String!
     updatedAt: String!
     vendor: Vendor
@@ -18,16 +18,16 @@ export const ShopTypeDefs = `#graphql
   }
 
   type ShopListResponse implements BaseResponse {
-    statusCode: Int
-    success: Boolean
+    statusCode: Int!
+    success: Boolean!
     message: String
     meta: Meta
     data: [Shop]
   }
 
   type ShopResponse implements BaseResponse {
-    statusCode: Int
-    success: Boolean
+    statusCode: Int!
+    success: Boolean!
     message: String
     data: Shop
   }
@@ -47,7 +47,7 @@ export const ShopTypeDefs = `#graphql
     email: String
     contactNumber: String
     isDeleted: Boolean
-    isTemporaryDeleted: Boolean
+    isTemporaryDelete: Boolean
   }
 
   enum ShopStatus {
@@ -72,6 +72,8 @@ export const ShopTypeDefs = `#graphql
     createShop(input: CreateShopInput!): ShopResponse!
     updateShop(id: ID!, input: UpdateShopInput!): ShopResponse!
     deleteShop(id: ID!): ShopResponse!
+    temporaryDeleteShop(id: ID!): ShopResponse!
+    restoreShop(id: ID!): ShopResponse!
     verifyShop(id: ID!): ShopResponse!
   }
 `;

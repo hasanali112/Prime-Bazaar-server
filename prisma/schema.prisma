@@ -165,8 +165,6 @@ model Product {
   stockQuantity    Int
   discountPercent  Float?
   brand            String
-  itemCategoryId   String
-  shopId           String
   isFlashSale      Boolean        @default(false)
   flashSaleEndTime DateTime?
   shippingMethods  ShippingMethod
@@ -175,8 +173,11 @@ model Product {
   variants         Variant[]
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-  shop             Shop           @relation(fields: [shopId], references: [id])
-  itemCategory     ItemCategory   @relation(fields: [itemCategoryId], references: [id])
+
+  shopId         String
+  shop           Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  itemCategoryId String
+  itemCategory   ItemCategory @relation(fields: [itemCategoryId], references: [id])
 
   @@map("products")
 }
@@ -189,7 +190,7 @@ model Variant {
   productId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("variants")
 }

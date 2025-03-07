@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Gender, PrismaClient, UserRole } from "@prisma/client";
-import { IncomingMessage, ServerResponse } from "http";
 
 export type TPrisma = {
   prisma: PrismaClient;

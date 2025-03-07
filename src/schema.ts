@@ -6,6 +6,8 @@ import { AdminTypeDefs } from "./module/Admin/admin.typeDefs";
 import { AuthTypeDefs } from "./module/auth/auth.typeDefs";
 import { CategoryTypeDefs } from "./module/Category/category.typeDefs";
 import { CustomerTypeDefs } from "./module/Customer/customer.typeDefs";
+import { ProductTypeDefs } from "./module/Product/product.typeDefs";
+import { ShopTypeDefs } from "./module/Shop/shop.typeDefs";
 import { UserTypeDefs } from "./module/User/user.typeDefs";
 import { VendorTypeDefs } from "./module/Vendor/vendor.typeDefs";
 import { BaseTypeDefs } from "./utilityTypeDefs/base.typeDefs";
@@ -18,4 +20,6 @@ export const typeDefs = `#graphql
   ${VendorTypeDefs}
   ${CustomerTypeDefs}
   ${CategoryTypeDefs}
+  ${ShopTypeDefs}
+  ${ProductTypeDefs}
 `;
