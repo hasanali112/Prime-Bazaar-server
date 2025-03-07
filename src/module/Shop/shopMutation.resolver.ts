@@ -221,4 +221,94 @@ export const shopMutationResolver = {
       data: updatedShop,
     };
   },
+
+  restoreShop: async (
+    parent: any,
+    { id }: { id: string },
+    { prisma, userInfo }: any
+  ) => {
+    // Check if shop exists
+    const shop = await prisma.shop.findUnique({
+      where: { id },
+    });
+
+    if (!shop) {
+      throw new AppError("Shop not found", "NOT_FOUND");
+    }
+
+    if (
+      userInfo.role !== UserRole.ADMIN &&
+      (userInfo.role !== UserRole.VENDOR ||
+        shop.vendor.userId !== userInfo.userId)
+    ) {
+      throw new AppError(
+        "Only administrators or shop owners can restore shops",
+        "FORBIDDEN"
+      );
+    }
+
+    let updatedShop;
+
+    // Restore shop
+    if (userInfo.role === UserRole.VENDOR) {
+      updatedShop = await prisma.shop.update({
+        where: { id },
+        data: {
+          isTemporaryDelete: false,
+          status: ShopStatus.ACTIVE,
+        },
+      });
+    } else if (userInfo.role === UserRole.ADMIN) {
+      updatedShop = await prisma.shop.update({
+        where: { id },
+        data: {
+          isTemporaryDelete: false,
+          isDeleted: false,
+          status: ShopStatus.ACTIVE,
+        },
+      });
+    }
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Shop restored successfully",
+      data: updatedShop,
+    };
+  },
+
+  verifyShop: async (
+    parent: any,
+    { id }: { id: string },
+    { prisma, userInfo }: any
+  ) => {
+    // Only admin can verify shops
+    if (userInfo.role !== UserRole.ADMIN) {
+      throw new AppError("Only administrators can verify shops", "FORBIDDEN");
+    }
+
+    // Check if shop exists
+    const shop = await prisma.shop.findUnique({
+      where: { id },
+    });
+
+    if (!shop) {
+      throw new AppError("Shop not found", "NOT_FOUND");
+    }
+
+    // Verify shop
+    const updatedShop = await prisma.shop.update({
+      where: { id },
+      data: {
+        isVerified: true,
+      },
+    });
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Shop verified successfully",
+      data: updatedShop,
+    };
+  },
 };
