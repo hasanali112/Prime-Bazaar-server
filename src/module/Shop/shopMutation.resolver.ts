@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { UserRole } from "@prisma/client";
+import { ShopStatus, UserRole } from "@prisma/client";
 import AppError from "../../error/AppError";
 import { uploadSingleImageToCloudinary } from "../../utils/upload";
 
@@ -142,6 +142,82 @@ export const shopMutationResolver = {
       statusCode: 200,
       success: true,
       message: "Shop updated successfully",
+      data: updatedShop,
+    };
+  },
+
+  deleteShop: async (
+    parent: any,
+    { id }: { id: string },
+    { prisma, userInfo }: any
+  ) => {
+    // Only admin can permanently delete a shop
+    if (userInfo.role !== UserRole.ADMIN) {
+      throw new AppError("Only administrators can delete shops", "FORBIDDEN");
+    }
+
+    // Check if shop exists
+    const shop = await prisma.shop.findUnique({
+      where: { id },
+    });
+
+    if (!shop) {
+      throw new AppError("Shop not found", "NOT_FOUND");
+    }
+
+    // Hard delete shop
+    await prisma.shop.delete({
+      where: { id },
+    });
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Shop deleted successfully",
+      data: null,
+    };
+  },
+
+  temporaryDeleteShop: async (
+    parent: any,
+    { id }: { id: string },
+    { prisma, userInfo }: any
+  ) => {
+    // Check if shop exists
+    const shop = await prisma.shop.findUnique({
+      where: { id },
+      include: { vendor: true },
+    });
+
+    if (!shop) {
+      throw new AppError("Shop not found", "NOT_FOUND");
+    }
+
+    // Check permissions - only the owner vendor or admin can soft delete
+    if (
+      userInfo.role !== UserRole.ADMIN &&
+      (userInfo.role !== UserRole.VENDOR ||
+        shop.vendor.userId !== userInfo.userId)
+    ) {
+      throw new AppError(
+        "You don't have permission to delete this shop",
+        "FORBIDDEN"
+      );
+    }
+
+    // Soft delete shop by setting isTemporaryDelete to true
+    const updatedShop = await prisma.shop.update({
+      where: { id },
+      data: {
+        isTemporaryDelete: true,
+        status: ShopStatus.INACTIVE,
+      },
+    });
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Shop temporarily deleted successfully",
       data: updatedShop,
     };
   },
