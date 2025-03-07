@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { UserRole } from "@prisma/client";
+import AppError from "../../error/AppError";
+
 export const shopQueryResolver = {
   getAllShops: async (
     parent: any,
@@ -73,6 +76,84 @@ export const shopQueryResolver = {
         total,
       },
       data: shops,
+    };
+  },
+
+  getShop: async (parent: any, { id }: { id: string }, { prisma }: any) => {
+    // Find the shop by ID
+    const shop = await prisma.shop.findUnique({
+      where: {
+        id,
+        isDeleted: false,
+      },
+      include: {
+        vendor: true,
+        products: {
+          where: {
+            isDeleted: false,
+          },
+        },
+      },
+    });
+
+    if (!shop) {
+      throw new AppError("Shop not found", "NOT_FOUND");
+    }
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Shop retrieved successfully",
+      data: shop,
+    };
+  },
+
+  // Get the current vendor's shop
+  getMyShop: async (parent: any, args: any, { prisma, userInfo }: any) => {
+    // Check if user is authenticated
+    if (!userInfo || !userInfo.userId) {
+      throw new AppError("Authentication required", "UNAUTHORIZED");
+    }
+
+    // Check if user is a vendor
+    if (userInfo.role !== UserRole.VENDOR) {
+      throw new AppError("Only vendors can access their shop", "FORBIDDEN");
+    }
+
+    // Get vendor information
+    const user = await prisma.user.findUnique({
+      where: { id: userInfo.userId },
+      include: { vendor: true },
+    });
+
+    if (!user || !user.vendor) {
+      throw new AppError("Vendor profile not found", "NOT_FOUND");
+    }
+
+    // Find the vendor's shop
+    const shop = await prisma.shop.findUnique({
+      where: {
+        vendorId: user.vendor.id,
+        isDeleted: false,
+      },
+      include: {
+        products: {
+          where: {
+            isDeleted: false,
+          },
+        },
+      },
+    });
+
+    if (!shop) {
+      throw new AppError("Shop not found", "NOT_FOUND");
+    }
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Shop retrieved successfully",
+      data: shop,
     };
   },
 };
