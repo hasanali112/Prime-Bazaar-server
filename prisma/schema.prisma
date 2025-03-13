@@ -152,6 +152,7 @@ model Shop {
   vendorId          String     @unique
   vendor            Vendor     @relation(fields: [vendorId], references: [id])
   products          Product[]
+  coupons           Coupon[]
 
   @@map("shops")
 }
@@ -178,6 +179,8 @@ model Product {
   shop           Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
   itemCategoryId String
   itemCategory   ItemCategory @relation(fields: [itemCategoryId], references: [id])
+  couponId       String?
+  coupon         Coupon?      @relation(fields: [couponId], references: [id])
 
   @@map("products")
 }
@@ -193,6 +196,33 @@ model Variant {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("variants")
+}
+
+model Coupon {
+  id                String       @id @default(uuid())
+  code              String       @unique
+  description       String?
+  discountType      DiscountType
+  discountValue     Float
+  minPurchaseAmount Float?
+  maxDiscountAmount Float?
+  startDate         DateTime
+  endDate           DateTime
+  isActive          Boolean      @default(true)
+  usageLimit        Int? // Maximum number of times the coupon can be used in total
+  usageCount        Int          @default(0) // Counter for tracking total usage
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  shopId            String
+  shop              Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products          Product[]
+
+  @@map("coupons")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
 }
 
 enum ShippingMethod {
