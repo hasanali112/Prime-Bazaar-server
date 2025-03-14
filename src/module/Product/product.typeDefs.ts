@@ -92,6 +92,7 @@ export const ProductTypeDefs = `#graphql
     shippingCharge: Float
     status: ProductStatus
     itemCategoryId: ID
+    variants: [UpdateVariantInput]
   }
 
   input UpdateVariantInput {

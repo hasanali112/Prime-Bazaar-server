@@ -97,6 +97,7 @@ model SuspendedUser {
 model MainCategory {
   id            String        @id @default(uuid())
   name          String        @unique
+  icon          String?
   description   String?
   isDeleted     Boolean       @default(false)
   createdAt     DateTime      @default(now())

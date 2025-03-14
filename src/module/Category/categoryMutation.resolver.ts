@@ -3,14 +3,17 @@
 import { Prisma, UserRole } from "@prisma/client";
 import AppError from "../../error/AppError";
 import { handleResolver } from "../../utils/handleResolver";
+import { uploadSingleImageToCloudinary } from "../../utils/upload";
 
 export const categoryMutationResolver = {
   createMainCategory: async (
     _parent: any,
-    { input }: { input: { name: string; description?: string } },
+    { input }: { input: { name: string; icon?: File; description?: string } },
     { prisma, userInfo }: any
   ) => {
     return handleResolver(async () => {
+      const { name, icon, description } = input;
+
       // Guard to check if the user is an Admin
       if (userInfo.role !== UserRole.ADMIN) {
         throw new AppError(
@@ -27,8 +30,17 @@ export const categoryMutationResolver = {
         throw new AppError("Category already exists", "BAD_REQUEST");
       }
 
+      const uploadedImage: any = await uploadSingleImageToCloudinary(
+        icon,
+        "icon"
+      );
+
       const category = await prisma.mainCategory.create({
-        data: input,
+        data: {
+          name,
+          icon: uploadedImage.secure_url,
+          description,
+        },
         include: {
           subCategories: true,
         },

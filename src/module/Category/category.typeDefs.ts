@@ -54,6 +54,7 @@ export const CategoryTypeDefs = `#graphql
   type MainCategory {
     id: ID!
     name: String!
+    icon: String
     description: String
     subCategories: [SubCategory!]
     createdAt: String!
@@ -81,6 +82,7 @@ export const CategoryTypeDefs = `#graphql
 
   input CreateMainCategoryInput {
     name: String!
+    icon: Upload
     description: String
   }
 
