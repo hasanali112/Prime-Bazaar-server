@@ -4,6 +4,7 @@ import {
   ProductStatus,
   ShippingMethod,
   UserRole,
+  Variant,
 } from "@prisma/client";
 import AppError from "../../error/AppError";
 import { uploadMultipleImagesToCloudinary } from "../../utils/upload";
@@ -463,6 +464,172 @@ export const productMutationResolver = {
       statusCode: 200,
       success: true,
       message: "Variant added successfully",
+      data: updatedProduct,
+    };
+  },
+
+  updateVariant: async (
+    parent: any,
+    {
+      productId,
+      input,
+    }: {
+      productId: string;
+      input: {
+        id: string;
+        color?: string;
+        images?: File[];
+        sizes?: string[];
+      };
+    },
+    { prisma, userInfo }: any
+  ) => {
+    // Find product and check if it exists
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        shop: { include: { vendor: true } },
+        variants: true,
+      },
+    });
+
+    if (!product) {
+      throw new AppError("Product not found", "NOT_FOUND");
+    }
+
+    // Check if variant exists and belongs to the product
+    const variantExists = product.variants.some((v: any) => v.id === input.id);
+    if (!variantExists) {
+      throw new AppError("Variant not found for this product", "NOT_FOUND");
+    }
+
+    // Check if user has permission to update variant
+    if (
+      userInfo.role !== UserRole.ADMIN &&
+      (userInfo.role !== UserRole.VENDOR ||
+        product.shop.vendor.userId !== userInfo.userId)
+    ) {
+      throw new AppError(
+        "You don't have permission to update variants for this product",
+        "FORBIDDEN"
+      );
+    }
+
+    // Prepare update data
+    const updateData: any = {};
+
+    if (input.color !== undefined) {
+      updateData.color = input.color;
+    }
+
+    if (input.sizes !== undefined) {
+      updateData.sizes = input.sizes;
+    }
+
+    // Upload new images if provided
+    if (input.images && input.images.length > 0) {
+      const uploadedImages = await uploadMultipleImagesToCloudinary(
+        input.images,
+        "products"
+      );
+      updateData.images = uploadedImages.map((img: any) => img.secure_url);
+    }
+
+    // Update variant
+    await prisma.variant.update({
+      where: { id: input.id },
+      data: updateData,
+    });
+
+    // Fetch updated product with all variants
+    const updatedProduct = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        variants: true,
+        shop: true,
+        itemCategory: true,
+      },
+    });
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Variant updated successfully",
+      data: updatedProduct,
+    };
+  },
+
+  deleteVariant: async (
+    parent: any,
+    {
+      productId,
+      variantId,
+    }: {
+      productId: string;
+      variantId: string;
+    },
+    { prisma, userInfo }: any
+  ) => {
+    // Find product and check if it exists
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        shop: { include: { vendor: true } },
+        variants: true,
+      },
+    });
+
+    if (!product) {
+      throw new AppError("Product not found", "NOT_FOUND");
+    }
+
+    // Check if variant exists and belongs to the product
+    const variantExists = product.variants.some(
+      (v: Variant) => v.id === variantId
+    );
+    if (!variantExists) {
+      throw new AppError("Variant not found for this product", "NOT_FOUND");
+    }
+
+    // Check if user has permission to delete variant
+    if (
+      userInfo.role !== UserRole.ADMIN &&
+      (userInfo.role !== UserRole.VENDOR ||
+        product.shop.vendor.userId !== userInfo.userId)
+    ) {
+      throw new AppError(
+        "You don't have permission to delete variants for this product",
+        "FORBIDDEN"
+      );
+    }
+
+    // Make sure product has more than one variant before deletion
+    if (product.variants.length <= 1) {
+      throw new AppError(
+        "Cannot delete the only variant of a product. Products must have at least one variant.",
+        "BAD_REQUEST"
+      );
+    }
+
+    // Delete variant
+    await prisma.variant.delete({
+      where: { id: variantId },
+    });
+
+    // Fetch updated product with remaining variants
+    const updatedProduct = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        variants: true,
+        shop: true,
+        itemCategory: true,
+      },
+    });
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Variant deleted successfully",
       data: updatedProduct,
     };
   },
