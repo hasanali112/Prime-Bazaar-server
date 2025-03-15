@@ -1,4 +1,3 @@
-// product.typeDefs.ts
 export const ProductTypeDefs = `#graphql
   type Product {
     id: ID!
@@ -19,6 +18,7 @@ export const ProductTypeDefs = `#graphql
     shop: Shop!
     itemCategory: ItemCategory!
     variants: [Variant!]
+    coupon: Coupon
   }
 
   type Variant {
@@ -26,6 +26,23 @@ export const ProductTypeDefs = `#graphql
     color: String
     images: [String!]!
     sizes: [String!]!
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  type Coupon {
+    id: ID!
+    code: String!
+    description: String
+    discountType: DiscountType!
+    discountValue: Float!
+    minPurchaseAmount: Float
+    maxDiscountAmount: Float
+    startDate: String!
+    endDate: String!
+    isActive: Boolean!
+    usageLimit: Int
+    usageCount: Int!
     createdAt: String!
     updatedAt: String!
   }
@@ -42,6 +59,10 @@ export const ProductTypeDefs = `#graphql
     DELETED
   }
 
+  enum DiscountType {
+    PERCENTAGE
+    FIXED_AMOUNT
+  }
 
   type ProductListResponse implements BaseResponse {
     statusCode: Int!
@@ -99,47 +120,47 @@ export const ProductTypeDefs = `#graphql
     id: ID!
     color: String
     images: [Upload!]
-    sizes: [String!]
+    sizes: [String]
   }
 
   input ProductFilterInput {
+    page: Int
+    limit: Int
+    sortBy: String
+    sortOrder: SortOrder
     minPrice: Float
     maxPrice: Float
-    brand: [String!]
+    brand: String
     itemCategoryId: ID
     isFlashSale: Boolean
     status: ProductStatus
     searchTerm: String
   }
 
+  enum SortOrder {
+  ASC
+  DESC
+  LOW_TO_HIGH
+  HIGH_TO_LOW
+  NEWEST
+  OLDEST
+}
+
   type Query {
     getAllProducts(
-      page: Int
-      limit: Int
-      filters: ProductFilterInput
-      sortBy: String
-      sortOrder: String
+      filters: ProductFilterInput   
     ): ProductListResponse!
     
     getProduct(id: ID!): ProductResponse!
     
     getShopProducts(
       shopId: ID!
-      page: Int
-      limit: Int
       filters: ProductFilterInput
-      sortBy: String
-      sortOrder: String
     ): ProductListResponse!
     
     getMyShopProducts(
-      page: Int
-      limit: Int
       filters: ProductFilterInput
-      sortBy: String
-      sortOrder: String
     ): ProductListResponse!
-    
   }
 
   type Mutation {
@@ -166,7 +187,5 @@ export const ProductTypeDefs = `#graphql
       productId: ID!
       variantId: ID!
     ): ProductResponse!
-    
   }
-
 `;
