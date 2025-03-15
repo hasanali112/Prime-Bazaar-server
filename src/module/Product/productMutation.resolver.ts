@@ -341,4 +341,129 @@ export const productMutationResolver = {
       data: updatedProduct,
     };
   },
+
+  deleteProduct: async (
+    parent: any,
+    { id }: { id: string },
+    { prisma, userInfo }: any
+  ) => {
+    // Find product and check if it exists
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { shop: { include: { vendor: true } } },
+    });
+
+    if (!product) {
+      throw new AppError("Product not found", "NOT_FOUND");
+    }
+
+    // Check if user has permission to delete the product
+    // Only the shop owner (vendor) or an admin can delete a product
+    if (
+      userInfo.role !== UserRole.ADMIN &&
+      (userInfo.role !== UserRole.VENDOR ||
+        product.shop.vendor.userId !== userInfo.userId)
+    ) {
+      throw new AppError(
+        "You don't have permission to delete this product",
+        "FORBIDDEN"
+      );
+    }
+
+    // For admins, hard delete the product
+    if (userInfo.role === UserRole.ADMIN) {
+      await prisma.product.delete({
+        where: { id },
+      });
+    }
+    // For vendors, soft delete by updating status
+    else {
+      await prisma.product.update({
+        where: { id },
+        data: {
+          status: ProductStatus.DELETED,
+        },
+      });
+    }
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Product deleted successfully",
+      data: null,
+    };
+  },
+
+  addVariant: async (
+    parent: any,
+    {
+      productId,
+      variant,
+    }: {
+      productId: string;
+      variant: {
+        color?: string;
+        images: File[];
+        sizes?: string[];
+      };
+    },
+    { prisma, userInfo }: any
+  ) => {
+    // Find product and check if it exists
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { shop: { include: { vendor: true } } },
+    });
+
+    if (!product) {
+      throw new AppError("Product not found", "NOT_FOUND");
+    }
+
+    // Check if user has permission to add variant
+    if (
+      userInfo.role !== UserRole.ADMIN &&
+      (userInfo.role !== UserRole.VENDOR ||
+        product.shop.vendor.userId !== userInfo.userId)
+    ) {
+      throw new AppError(
+        "You don't have permission to add variants to this product",
+        "FORBIDDEN"
+      );
+    }
+
+    // Upload images
+    const uploadedImages = await uploadMultipleImagesToCloudinary(
+      variant.images,
+      "images"
+    );
+
+    const imageUrls = uploadedImages.map((img: any) => img.secure_url);
+
+    // Create new variant
+    await prisma.variant.create({
+      data: {
+        color: variant.color,
+        images: imageUrls,
+        sizes: variant.sizes || [],
+        productId,
+      },
+    });
+
+    // Fetch updated product with all variants
+    const updatedProduct = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        variants: true,
+        shop: true,
+        itemCategory: true,
+      },
+    });
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: "Variant added successfully",
+      data: updatedProduct,
+    };
+  },
 };
