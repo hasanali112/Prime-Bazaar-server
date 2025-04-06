@@ -259,4 +259,60 @@ export const couponMutationResolver = {
       },
   
 
+      removeCouponFromProduct: async (
+        parent: any,
+        { productId }: any,
+        { prisma, userInfo }: any
+      ) => {
+        if (userInfo.role !== "VENDOR") {
+          throw new AppError("Only vendors can remove coupons", "FORBIDDEN");
+        }
+  
+        // Check if product exists and belongs to vendor's shop
+        const product = await prisma.product.findUnique({
+          where: { id: productId },
+          include: { shop: true, coupon: true },
+        });
+  
+        if (!product) {
+          throw new AppError("Product not found", "NOT_FOUND");
+        }
+  
+        // Get vendor's shop to verify ownership
+        const vendor = await prisma.vendor.findUnique({
+          where: { userId: userInfo.userId },
+          include: { shop: true },
+        });
+  
+        if (!vendor || !vendor.shop || product.shop.vendorId !== vendor.id) {
+          throw new AppError("You can only modify your products", "FORBIDDEN");
+        }
+  
+        if (!product.couponId) {
+          throw new AppError("Product doesn't have a coupon applied", "BAD_REQUEST");
+        }
+  
+        // Remove coupon from product
+        const updatedProduct = await prisma.product.update({
+          where: { id: productId },
+          data: {
+            couponId: null,
+          },
+          include: {
+            coupon: true,
+            variants: true,
+            shop: true,
+            itemCategory: true,
+          },
+        });
+  
+        return {
+          statusCode: 200,
+          success: true,
+          message: "Coupon removed from product successfully",
+          data: updatedProduct,
+        };
+      },
+    
+
 };
