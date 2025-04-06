@@ -42,7 +42,6 @@ export const CouponTypeDefs = `#graphql
     maxDiscountAmount: Float
     startDate: String!
     endDate: String!
-    isActive: Boolean
     usageLimit: Int
   }
 
@@ -69,7 +68,7 @@ export const CouponTypeDefs = `#graphql
   }
 
   type Query {
-    getCoupons(
+    getAllCoupons(
         filters:CuponFilterInput
     ): CouponListResponse!
     getCoupon(id: ID!): CouponResponse!
