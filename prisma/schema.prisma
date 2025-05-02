@@ -236,7 +236,6 @@ model Order {
   zipCode         String
   billingAddress  String?
   shippingMethod  ShippingMethod
-  shippingCharge  Float
 
   orderDate    DateTime  @default(now())
   deliveryDate DateTime?
@@ -245,22 +244,23 @@ model Order {
   paymentStatus PaymentStatus @default(UNPAID)
   paymentMethod PaymentMethod
 
+  shippingCharge Float       @default(0)
+  couponCode     String?
+  couponDiscount Float?
+  discountAmount Float?      @default(0)
   subtotal       Float
-  discountAmount Float       @default(0)
-  taxAmount      Float       @default(0)
   totalAmount    Float
   orderItems     OrderItem[]
 
-  trackingNumber      String?
-  notes               String?
-  deliveryNotes       String?
-  isDeleted           Boolean              @default(false)
-  isCancelled         Boolean              @default(false)
-  cancelReason        String?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  couponCode          String?
-  couponDiscount      Float?
+  trackingNumber String?
+  notes          String?
+  deliveryNotes  String?
+  isDeleted      Boolean  @default(false)
+  isCancelled    Boolean  @default(false)
+  cancelReason   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
   cancellationRequest CancellationRequest?
   payment             Payment?
 
@@ -347,14 +347,11 @@ enum PaymentStatus {
 }
 
 enum PaymentMethod {
-  CASH_ON_DELIVERY
   CREDIT_CARD
   DEBIT_CARD
   BKASH
   NAGAD
   ROCKET
-  BANK_TRANSFER
-  GIFT_CARD
 }
 
 enum DiscountType {

@@ -67,7 +67,6 @@ export const CustomerTypeDefs = `#graphql
     paymentMethod: PaymentMethod!
     subtotal: Float!
     discountAmount: Float!
-    taxAmount: Float!
     totalAmount: Float!
     orderItems: [OrderItem]
     payment: Payment

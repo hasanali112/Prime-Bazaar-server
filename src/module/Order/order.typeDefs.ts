@@ -19,8 +19,7 @@ export const OrderTypeDefs = `#graphql
     paymentStatus: PaymentStatus!
     paymentMethod: PaymentMethod!
     subtotal: Float!
-    discountAmount: Float!
-    taxAmount: Float!
+    discountAmount: Float
     totalAmount: Float!
     orderItems: [OrderItem!]!
     payment: Payment
@@ -156,6 +155,10 @@ export const OrderTypeDefs = `#graphql
     deliveryNotes: String
     couponCode: String
     orderItems: [OrderItemInput!]!
+    shippingCharge: Int
+    subtotal: Int!
+    discountAmount: Int
+    totalAmount: Int!
   }
 
   input OrderItemInput {
@@ -164,6 +167,9 @@ export const OrderTypeDefs = `#graphql
     quantity: Int!
     color: String
     size: String
+    unitPrice: Int!
+    discount: Int
+    subtotal: Int!
   }
 
   input UpdateOrderStatusInput {
