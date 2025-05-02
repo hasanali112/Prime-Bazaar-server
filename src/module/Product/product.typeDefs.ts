@@ -21,6 +21,26 @@ export const ProductTypeDefs = `#graphql
     coupon: Coupon
   }
 
+  type ItemCategory {
+    id: ID!
+    name: String!
+    description: String
+    subCategory: SubCategory!
+  }
+
+  type SubCategory {
+    id: ID!
+    name: String!
+    description: String
+    mainCategory: MainCategory!
+  }
+
+  type MainCategory {
+    id: ID!
+    name: String!
+    description: String
+  }
+
   type Variant {
     id: ID!
     color: String

@@ -236,7 +236,6 @@ model Order {
   zipCode         String
   billingAddress  String?
   shippingMethod  ShippingMethod
-  shippingCharge  Float
 
   orderDate    DateTime  @default(now())
   deliveryDate DateTime?
@@ -245,21 +244,25 @@ model Order {
   paymentStatus PaymentStatus @default(UNPAID)
   paymentMethod PaymentMethod
 
+  shippingCharge Float       @default(0)
+  couponCode     String?
+  couponDiscount Float?
+  discountAmount Float?      @default(0)
   subtotal       Float
-  discountAmount Float       @default(0)
-  taxAmount      Float       @default(0)
   totalAmount    Float
   orderItems     OrderItem[]
-  payment        Payment?
+
   trackingNumber String?
   notes          String?
   deliveryNotes  String?
-  isDeleted      Boolean     @default(false)
+  isDeleted      Boolean  @default(false)
+  isCancelled    Boolean  @default(false)
   cancelReason   String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  couponCode     String?
-  couponDiscount Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  cancellationRequest CancellationRequest?
+  payment             Payment?
 
   @@map("orders")
 }
@@ -282,6 +285,28 @@ model OrderItem {
   @@map("order_items")
 }
 
+model CancellationRequest {
+  id             String             @id @default(uuid())
+  orderId        String             @unique
+  order          Order              @relation(fields: [orderId], references: [id])
+  reason         String
+  details        String?
+  status         CancellationStatus @default(PENDING)
+  vendorResponse String?
+  requestedAt    DateTime           @default(now())
+  respondedAt    DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@map("cancellation_requests")
+}
+
+enum CancellationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Payment {
   id                  String        @id @default(uuid())
   orderId             String        @unique
@@ -301,8 +326,6 @@ model Payment {
 
   @@map("payments")
 }
-
-// Add these enums
 
 enum OrderStatus {
   PENDING
@@ -324,14 +347,11 @@ enum PaymentStatus {
 }
 
 enum PaymentMethod {
-  CASH_ON_DELIVERY
   CREDIT_CARD
   DEBIT_CARD
   BKASH
   NAGAD
   ROCKET
-  BANK_TRANSFER
-  GIFT_CARD
 }
 
 enum DiscountType {
