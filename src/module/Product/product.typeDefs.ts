@@ -91,7 +91,7 @@ export const ProductTypeDefs = `#graphql
     shippingMethods: ShippingMethod!
     shippingCharge: Float
     itemCategoryId: ID!
-    variants: [VariantInput!]
+    variants: [VariantInput]
   }
 
   input VariantInput {
